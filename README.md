@@ -12,8 +12,6 @@ separation of functions into new files. The goal is to make updates to the code 
 more direct testing of the individual components.
 
 ## TO DO
-1. Implement power spectrum calculation in order to enable calculation of shot noise.
-2. Overload get_bispectrum function in shells.h to allow for inverse tranforms of shells to be
-   stored in files.
-3. Add function to file_io.h to output shell transforms to disk.
-4. Add function to file_io.h to create memory mapped files for the shell transforms on disk.
+1. Test code and compare to results of GPU based code.
+2. If results of first test agree, try using rectangular prism instead of cube to greatly reduce
+memory requirements.
