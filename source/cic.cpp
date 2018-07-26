@@ -38,7 +38,7 @@ void getCICInfo(vec3<double> pos, const vec3<int> &N, const vec3<double> &L,
     vec3<int> ngp = {int(pos.x/del_r.x), int(pos.y/del_r.y), int(pos.z/del_r.z)};
     vec3<double> r_ngp = {(ngp.x + 0.5)*del_r.x, (ngp.y + 0.5)*del_r.y, (ngp.z + 0.5)*del_r.z};
     vec3<double> dr = {pos.x - r_ngp.x, pos.y - r_ngp.y, pos.z - r_ngp.z};
-    int3 shift;
+    vec3<int> shift;
     if (dr.x != 0) shift.x = int(dr.x/fabs(dr.x));
     else shift.x = 0;
     if (dr.y != 0) shift.y = int(dr.y/fabs(dr.y));

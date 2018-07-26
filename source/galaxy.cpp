@@ -2,6 +2,7 @@
 #include <sstream>
 #include <cmath>
 #include <gsl/gsl_integration.h>
+#include "../include/cic.h"
 #include "../include/galaxy.h"
 #include "../include/cosmology.h"
 #include "../include/tpods.h"
@@ -65,7 +66,7 @@ void galaxy::bin(std::vector<double> &delta, vec3<int> N, vec3<double> L, vec3<d
     std::vector<size_t> indices;
     std::vector<double> weights;
     
-    getCICInfo(galaxy::get_pos(), r_min, N, L, indices, weights);
+    getCICInfo(galaxy::get_cart(), N, L, indices, weights);
     
     if (indices.size() == weights.size()) {
         for (int i = 0; i < indices.size(); ++i)

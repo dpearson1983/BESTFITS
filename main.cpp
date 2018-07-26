@@ -11,6 +11,7 @@
 #include "include/tpods.h"
 #include "include/shells.h"
 #include "include/harppi.h"
+#include "include/power.h"
 
 int main(int argc, char *argv[]) {
     std::cout << "Initializing..." << std::endl;
@@ -29,6 +30,7 @@ int main(int argc, char *argv[]) {
     
     // Both r_min and L will be set automatically when reading in randoms
     vec3<double> r_min;
+    vec3<double> L;
     
     vec3<int> N = {p.geti("Nx"), p.geti("Ny"), p.geti("Nz")};
     
@@ -109,7 +111,7 @@ int main(int argc, char *argv[]) {
     
     std::cout << "Computing the bispectrum monopole..." << std::endl;
     std::vector<double> B;
-    std::vector<double> k_trip;
+    std::vector<vec3<double>> k_trip;
     get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, alpha, B, k_trip, p.gets("shellBase"), 
                    p.gets("shellExt"));
     writeBispectrumFile(p.gets("outFile"), k_trip, B);

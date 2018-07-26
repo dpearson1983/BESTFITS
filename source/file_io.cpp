@@ -4,13 +4,13 @@
 #include <string>
 #include <vector>
 #include <CCfits/CCfits>
-#include "../include/read_file.h"
+#include "../include/file_io.h"
 #include "../include/tpods.h"
 #include "../include/galaxy.h"
 #include "../include/cosmology.h"
 
 void getDR12Gals(std::string file, std::vector<galaxy> &gals) {
-    std::unique_ptr<CCfits::FITS> pInfile(new CCfits::FITS(file, CCfits::Read, false);
+    std::unique_ptr<CCfits::FITS> pInfile(new CCfits::FITS(file, CCfits::Read, false));
     
     CCfits::ExtHDU &table = pInfile->extension(1);
     long start = 1L;
@@ -37,7 +37,7 @@ void getDR12Gals(std::string file, std::vector<galaxy> &gals) {
 }
 
 void getDR12Rans(std::string file, std::vector<galaxy> &gals) {
-    std::unique_ptr<CCfits::FITS> pInfile(new CCfits::FITS(file, CCfits::Read, false);
+    std::unique_ptr<CCfits::FITS> pInfile(new CCfits::FITS(file, CCfits::Read, false));
     
     CCfits::ExtHDU &table = pInfile->extension(1);
     long start = 1L;
@@ -56,7 +56,7 @@ void getDR12Rans(std::string file, std::vector<galaxy> &gals) {
     table.column("WEIGHT_FKP").read(w_fkp, start, end);
     
     for (size_t i = 0; i < ra.size(); ++i) {
-        galaxy gal(ra[i], dec[i], red[i], nz[i], w_sys[i]*w_fkp[i]);
+        galaxy gal(ra[i], dec[i], red[i], nz[i], w_fkp[i]);
         gals.push_back(gal);
     }
 }
@@ -150,16 +150,16 @@ void readPatchyRan(std::string file, std::vector<double> &delta, vec3<int> N, ve
         rans.push_back(ran);
     }
     
-    r_min = getRMin(gals, cosmo, L);
+    r_min = getRMin(rans, cosmo, L);
     
-    for (size_t i = 0; i < gals.size(); ++i) {
-        gals[i].bin(delta, N, L, r_min, cosmo, pk_nbw, bk_nbw);
+    for (size_t i = 0; i < rans.size(); ++i) {
+        rans[i].bin(delta, N, L, r_min, cosmo, pk_nbw, bk_nbw);
     }
 }
 
 void setFileType(std::string typeString, FileType &type) {
     if (typeString == "DR12") {
-        type = fits;
+        type = dr12;
     } else if (typeString == "patchy") {
         type = patchy;
     } else if (typeString == "DR12_ran") {
@@ -177,7 +177,7 @@ void readFile(std::string file, std::vector<double> &delta, vec3<int> N, vec3<do
               vec3<double> &r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw,
               FileType type) {
     switch(type) {
-        case fits:
+        case dr12:
             readDR12(file, delta, N, L, r_min, cosmo, pk_nbw, bk_nbw);
             break;
         case patchy:

@@ -24,28 +24,22 @@ double get_V_f(vec3<double> L) {
 void get_shell(fftw_complex *shell, fftw_complex *dk, 
                std::vector<double> &kx, std::vector<double> &ky, std::vector<double> &kz, 
                double k_shell, double delta_k, vec3<int> N) {
-    if (shell.size() == dk.size()) {
-        #pragma omp parallel for
-        for (int i = 0; i < N.x; ++i) {
-            for (int j = 0; j < N.y; ++j) {
-                for (int k = 0; k <= N.z/2; ++k) {
-                    double k_mag = sqrt(kx[i]*kx[i] + ky[j]*ky[j] + kz[k]*kz[k]);
-                    size_t index = k + (N.z/2 + 1)*(j + N.y*i);
-                    
-                    if (k_mag >= k_shell - 0.5*delta_k && k_mag < k_shell + 0.5*delta_k) {
-                        shell[index][0] = dk[index][0];
-                        shell[index][1] = dk[index][1];
-                    } else {
-                        shell[index][0] = 0.0;
-                        shell[index][1] = 0.0;
-                    }
+    #pragma omp parallel for
+    for (int i = 0; i < N.x; ++i) {
+        for (int j = 0; j < N.y; ++j) {
+            for (int k = 0; k <= N.z/2; ++k) {
+                double k_mag = sqrt(kx[i]*kx[i] + ky[j]*ky[j] + kz[k]*kz[k]);
+                size_t index = k + (N.z/2 + 1)*(j + N.y*i);
+                
+                if (k_mag >= k_shell - 0.5*delta_k && k_mag < k_shell + 0.5*delta_k) {
+                    shell[index][0] = dk[index][0];
+                    shell[index][1] = dk[index][1];
+                } else {
+                    shell[index][0] = 0.0;
+                    shell[index][1] = 0.0;
                 }
             }
         }
-    } else {
-        std::stringstream err_msg;
-        err_msg << "Array size mismatch.\n";
-        throw std::runtime_error(err_msg.str());
     }
 }
 
@@ -104,9 +98,9 @@ double shell_prod(std::string k1File, std::string k2File, std::string k3File, ve
         std::ifstream k2in(k2File, std::ios::in|std::ios::binary);
         
         for (size_t i = 0; i < N_tot; ++i) {
-            double dr12, dr3;
-            k12in.read((char *) &dr13, sizeof(double));
-            k3in.read((char *) &dr2, sizeof(double));
+            double dr13, dr2;
+            k13in.read((char *) &dr13, sizeof(double));
+            k2in.read((char *) &dr2, sizeof(double));
             result += dr13*dr2*dr13;
         }
         k13in.close();

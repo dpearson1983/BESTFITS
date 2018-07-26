@@ -17,6 +17,8 @@ class galaxy{
                  cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw);
         
         void set_cartesian(cosmology &cosmo, vec3<double> r_min);
+        
+        vec3<double> get_unshifted_cart(cosmology &cosmo);
     
         vec3<double> get_cart();
 };

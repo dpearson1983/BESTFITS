@@ -14,7 +14,7 @@
 std::vector<double> fft_freq(int N, double L) {
     std::vector<double> k;
     k.reserve(N);
-    double dk = (2.0*pi)/L;
+    double dk = (2.0*PI)/L;
     for (int i = 0; i <= N/2; ++i)
         k.push_back(i*dk);
     for (int i = N/2 + 1; i < N; ++i)
@@ -23,7 +23,7 @@ std::vector<double> fft_freq(int N, double L) {
 }
 
 double fundamental_frequency(int N, double L) {
-    return (2.0*pi)/L;
+    return (2.0*PI)/L;
 }
 
 void foop_r2c(std::vector<double> &dr, std::vector<fftw_complex> &dk, vec3<int> N, 
@@ -161,7 +161,7 @@ void boop_c2c(std::vector<fftw_complex> &dr, std::vector<fftw_complex> &dk, vec3
 void fip_c2c(std::vector<fftw_complex> &delta, vec3<int> N,
              std::string wisdom_file, int nthreads = omp_get_max_threads()) {
     size_t N_tot = N.x*N.y*N.z;
-    if (dr.size() == N_tot && dk.size() == N_tot) {
+    if (delta.size() == N_tot) {
         fftw_init_threads();
         fftw_import_wisdom_from_filename(wisdom_file.c_str());
         fftw_plan_with_nthreads(nthreads);
@@ -183,7 +183,7 @@ void fip_c2c(std::vector<fftw_complex> &delta, vec3<int> N,
 void bip_c2c(std::vector<fftw_complex> &delta, vec3<int> N,
              std::string wisdom_file, int nthreads = omp_get_max_threads()) {
     size_t N_tot = N.x*N.y*N.z;
-    if (dr.size() == N_tot && dk.size() == N_tot) {
+    if (delta.size() == N_tot) {
         fftw_init_threads();
         fftw_import_wisdom_from_filename(wisdom_file.c_str());
         fftw_plan_with_nthreads(nthreads);
