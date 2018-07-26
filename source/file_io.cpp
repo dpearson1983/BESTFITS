@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -195,10 +196,31 @@ void readFile(std::string file, std::vector<double> &delta, vec3<int> N, vec3<do
     }
 }
 
-void writeFile(std::string file, std::vector<vec3<double>> ks, std::vector<double> B) {
+void writeBispectrumFile(std::string file, std::vector<vec3<double>> ks, std::vector<double> B) {
     std::ofstream fout(file);
     for (size_t i = 0; i < B.size(); ++i) {
         fout << ks[i].x << " " << ks[i].y << " " << ks[i].z << " " << B[i] << "\n";
     }
     fout.close();
+}
+
+void writeShellFile(std::string file, std::vector<double> &shell, vec3<int> N) {
+    size_t N_tot = N.x*N.y*N.z;
+    std::ofstream fout(file, std::ios::out|std::ios::binary);
+    for (int i = 0; i < N.x; ++i) {
+        for (int j = 0; j < N.y; ++j) {
+            for (int k = 0; k < N.z; ++k) {
+                int index = k + 2*(N.z/2 + 1)*(j + N.y*i);
+                shell[index] /= N_tot;
+                fout.write((char *) &shell[index], sizeof(double));
+            }
+        }
+    }
+    fout.close();
+}
+
+std::string filename(std::string base, int digits, int num, std::string ext) {
+    std::stringstream file;
+    file << base << std::setw(digits) << std::setfill('0') << num << "." << ext;
+    return file.str();
 }

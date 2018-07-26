@@ -69,4 +69,95 @@ double get_bispectrum(std::vector<double> &r_1, std::vector<double> &r_2, std::v
     }
 }
 
+double shell_prod(std::string k1File, std::string k2File, std::string k3File, vec3<int> N) {
+    double result = 0.0;
+    size_t N_tot = N.x*N.y*N.z;
+    if (k1File != k2File && k1File != k3File && k2File != k3File) {
+        std::ifstream k1in(k1File, std::ios::in|std::ios::binary);
+        std::ifstream k2in(k2File, std::ios::in|std::ios::binary);
+        std::ifstream k3in(k3File, std::ios::in|std::ios::binary);
+        
+        for (size_t i = 0; i < N_tot; ++i) {
+            double dr1, dr2, dr3;
+            k1in.read((char *) &dr1, sizeof(double));
+            k2in.read((char *) &dr2, sizeof(double));
+            k3in.read((char *) &dr3, sizeof(double));
+            result += dr1*dr2*dr3;
+        }
+        k1in.close();
+        k2in.close();
+        k3in.close();
+    } else if (k1File == k2File && k1File != k3File) {
+        std::ifstream k12in(k1File, std::ios::in|std::ios::binary);
+        std::ifstream k3in(k3File, std::ios::in|std::ios::binary);
+        
+        for (size_t i = 0; i < N_tot; ++i) {
+            double dr12, dr3;
+            k12in.read((char *) &dr12, sizeof(double));
+            k3in.read((char *) &dr3, sizeof(double));
+            result += dr12*dr12*dr3;
+        }
+        k12in.close();
+        k3in.close();
+    } else if (k1File == k3File && k1File != k2File) {
+        std::ifstream k13in(k1File, std::ios::in|std::ios::binary);
+        std::ifstream k2in(k2File, std::ios::in|std::ios::binary);
+        
+        for (size_t i = 0; i < N_tot; ++i) {
+            double dr12, dr3;
+            k12in.read((char *) &dr13, sizeof(double));
+            k3in.read((char *) &dr2, sizeof(double));
+            result += dr13*dr2*dr13;
+        }
+        k13in.close();
+        k2in.close();
+    } else if (k2File == k3File && k1File != k2File) {
+        std::ifstream k23in(k2File, std::ios::in|std::ios::binary);
+        std::ifstream k1in(k1File, std::ios::in|std::ios::binary);
+        
+        for (size_t i = 0; i < N_tot; ++i) {
+            double dr1, dr23;
+            k1in.read((char *) &dr1, sizeof(double));
+            k23in.read((char *) &dr23, sizeof(double));
+            result += dr1*dr23*dr23;
+        }
+        k23in.close();
+        k1in.close();
+    } else if (k1File == k2File && k1File == k3File) {
+        std::ifstream kin(k1File, std::ios::in|std::ios::binary);
+        
+        for (size_t i = 0; i < N_tot; ++i) {
+            double dr;
+            kin.read((char *) &dr, sizeof(double));
+            result += dr*dr*dr;
+        }
+    }
+        
+    return result;
+}
+
+void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
+                    vec3<double> ran_bk_nbw, vec3<int> N, double alpha, std::vector<double> &B, 
+                    std::vector<vec3<double>> k_trip, std::string shellBase, std::string shellExt) {
+    vec3<double> kt;
+    for (int i = 0; i < ks.size(); ++i) {
+        std::string k1File = filename(shellBase, 2, i, shellExt);
+        kt.x = ks[i];
+        for (int j = i; j < ks.size(); ++j) {
+            std::string k2File = filename(shellBase, 2, j, shellExt);
+            kt.y = ks[j];
+            for (int k = j; k < ks.size(); ++k) {
+                std::string k3File = filename(shellBase, 2, k, shellExt);
+                kt.z = ks[k];
+                double B_est = shell_prod(k1File, k2File, k3File, N);
+                B_est -= (P[i] + P[j] + P[k])*gal_bk_nbw.y;
+                B_est -= gal_bk_nbw.x - alpha*alpha*ran_bk_nbw.x;
+                B_est /= gal_bk_nbw.z;
+                B.push_back(B_est);
+                k_trip.push_back(kt);
+            }
+        }
+    }
+}
+
 #endif

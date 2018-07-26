@@ -13,6 +13,7 @@
 #include "include/harppi.h"
 
 int main(int argc, char *argv[]) {
+    std::cout << "Initializing..." << std::endl;
     parameters p(argv[1]);
     p.print();
     
@@ -31,6 +32,7 @@ int main(int argc, char *argv[]) {
     
     vec3<int> N = {p.geti("Nx"), p.geti("Ny"), p.geti("Nz")};
     
+    std::cout << "Setting file type variables..." << std::endl;
     FileType dataFileType, ranFileType;
     setFileType(p.gets("dataFileType"), dataFileType);
     setFileType(p.gets("ranFileType"), ranFileType);
@@ -38,6 +40,7 @@ int main(int argc, char *argv[]) {
     std::vector<double> delta(N.x*N.y*2.0*(N.z/2 + 1));
     double alpha;
     
+    std::cout << "Reading in data and randoms files..." << std::endl;
     // Since the N's can be large values, individual arrays for the FFTs will be quite large. Instead
     // of reusing a fixed number of arrays, by using braced enclosed sections, variables declared
     // within the braces will go out of scope, freeing the associated memory. Here, given how the
@@ -64,12 +67,15 @@ int main(int argc, char *argv[]) {
             }
         }
     }
+    std::cout << "Done!" << std::endl;
     
     std::vector<double> kx = fft_freq(N.x, L.x);
     std::vector<double> ky = fft_freq(N.y, L.y);
     std::vector<double> kz = fft_freq(N.z, L.z);
     
+    std::cout << "Fourier transforming overdensity field..." << std::endl;
     fip_r2c(delta, N, p.gets("wisdomFile"), omp_get_max_threads());
+    std::cout << "Applying correction for CIC binning..." << std::endl;
     CICbinningCorrection((fftw_complex *) delta.data(), N, L, kx, ky, kz);
     
     double V_f = get_V_f(L);
@@ -82,16 +88,31 @@ int main(int argc, char *argv[]) {
     double delta_k = p.getd("delta_k");
     int num_k_bins = int((k_max - k_min)/delta_k);
     
+    std::cout << "Computing the power spectrum..." << std::endl;
     std::vector<double> P(num_k_bins);
     std::vector<int> N_k(num_k_bins);
     double PkShotNoise = gal_pk_nbw.y + alpha*ran_bk_nbw.y;
     binFrequencies((fftw_complex *)delta.data(), P, N_k, N, kx, ky, kz, delta_k, k_min, k_max,
                    PkShotNoise);
     
-    for (int i = 0; i < p.geti("num_k_bins"); ++i) {
+    std::cout << "Selecting frequency shells, inverse transforming, and outputting to files..." << std::endl;
+    std::vector<double> ks;
+    for (int i = 0; i < num_k_bins; ++i) {
         double k = k_min + (i + 0.5)*delta_k;
         get_shell((fftw_complex *)shell.data(), (fftw_complex *)delta.data(), kx, ky, kz, k, delta_k,
                   N);
         bip_c2r(shell, N, p.gets("wisdomFile"), omp_get_max_threads());
-        // TODO: Output to file here.
+        std::string shellFile = filename(p.gets("shellBase"), 2, i, p.gets("shellExt"));
+        writeShellFile(shellFile, shell, N);
+        ks.push_back(k);
     }
+    
+    std::cout << "Computing the bispectrum monopole..." << std::endl;
+    std::vector<double> B;
+    std::vector<double> k_trip;
+    get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, alpha, B, k_trip, p.gets("shellBase"), 
+                   p.gets("shellExt"));
+    writeBispectrumFile(p.gets("outFile"), k_trip, B);
+    
+    return 0;
+}
