@@ -11,20 +11,17 @@
 #define PI 3.1415926535897932384626433832795
 #endif
 
-void galaxy::set_cartesian(cosmology &cosmo, vec3<double> r_min) {
-    gsl_integration_workspace *ws = gsl_integration_workspace_alloc(10000000);
+void galaxy::set_cartesian(cosmology &cosmo, vec3<double> r_min, gsl_integration_workspace *ws) {
     double D = cosmo.comoving_distance(galaxy::red, ws);
     
     galaxy::cart.x = D*cos(galaxy::dec*PI/180.0)*cos(galaxy::ra*PI/180.0) - r_min.x;
     galaxy::cart.y = D*cos(galaxy::dec*PI/180.0)*sin(galaxy::ra*PI/180.0) - r_min.y;
     galaxy::cart.z = D*sin(galaxy::dec*PI/180.0) - r_min.z;
     
-    gsl_integration_workspace_free(ws);
     galaxy::cart_set = true;
 }
 
-vec3<double> galaxy::get_unshifted_cart(cosmology &cosmo) {
-    gsl_integration_workspace *ws = gsl_integration_workspace_alloc(10000000);
+vec3<double> galaxy::get_unshifted_cart(cosmology &cosmo, gsl_integration_workspace *ws) {
     double D = cosmo.comoving_distance(galaxy::red, ws);
     
     vec3<double> cart;
@@ -32,8 +29,6 @@ vec3<double> galaxy::get_unshifted_cart(cosmology &cosmo) {
     cart.x = D*cos(galaxy::dec*PI/180.0)*cos(galaxy::ra*PI/180.0);
     cart.y = D*cos(galaxy::dec*PI/180.0)*sin(galaxy::ra*PI/180.0);
     cart.z = D*sin(galaxy::dec*PI/180.0);
-    
-    gsl_integration_workspace_free(ws);
     
     return cart;
 }
@@ -52,8 +47,9 @@ galaxy::galaxy(double RA, double DEC, double RED, double NZ, double W) {
 }
 
 void galaxy::bin(std::vector<double> &delta, vec3<int> N, vec3<double> L, vec3<double> r_min,
-                 cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw) {
-    if (!galaxy::cart_set) galaxy::set_cartesian(cosmo, r_min);
+                 cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw, 
+                 gsl_integration_workspace *ws) {
+    if (!galaxy::cart_set) galaxy::set_cartesian(cosmo, r_min, ws);
     
     pk_nbw.x += galaxy::w;
     pk_nbw.y += galaxy::w*galaxy::w;

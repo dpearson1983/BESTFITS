@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <CCfits/CCfits>
+#include <gsl/gsl_integration.h>
 #include "../include/file_io.h"
 #include "../include/tpods.h"
 #include "../include/galaxy.h"
@@ -37,6 +38,7 @@ void getDR12Gals(std::string file, std::vector<galaxy> &gals) {
 }
 
 void getDR12Rans(std::string file, std::vector<galaxy> &gals) {
+//     std::cout << "      Reading randoms from a DR12 fits file..." << std::endl;
     std::unique_ptr<CCfits::FITS> pInfile(new CCfits::FITS(file, CCfits::Read, false));
     
     CCfits::ExtHDU &table = pInfile->extension(1);
@@ -55,17 +57,25 @@ void getDR12Rans(std::string file, std::vector<galaxy> &gals) {
     table.column("NZ").read(nz, start, end);
     table.column("WEIGHT_FKP").read(w_fkp, start, end);
     
+//     std::cout << "      Number of randoms = " << ra.size() << std::endl;
+    
+//     std::cout << "      Adding randoms to a vector..." << std::endl;
     for (size_t i = 0; i < ra.size(); ++i) {
+//         std::cout << "\r" << i;
         galaxy gal(ra[i], dec[i], red[i], nz[i], w_fkp[i]);
         gals.push_back(gal);
     }
+//     std::cout << "\n" << "      Number of randoms = " << gals.size() << std::endl;
 }
 
 vec3<double> getRMin(std::vector<galaxy> &gals, cosmology &cosmo, vec3<double> &L) {
     vec3<double> r_min = {1E17, 1E17, 1E17};
     vec3<double> r_max = {-1E17, -1E17, -1E17};
+    gsl_integration_workspace *ws = gsl_integration_workspace_alloc(10000000);
+//     std::cout << "      Finding cartesian coordinates..." << std::endl;
     for (size_t i = 0; i < gals.size(); ++i) {
-        vec3<double> pos = gals[i].get_unshifted_cart(cosmo);
+//         std::cout << "\r" << i;
+        vec3<double> pos = gals[i].get_unshifted_cart(cosmo, ws);
         if (pos.x < r_min.x) r_min.x = pos.x;
         if (pos.y < r_min.y) r_min.y = pos.y;
         if (pos.z < r_min.z) r_min.z = pos.z;
@@ -73,6 +83,7 @@ vec3<double> getRMin(std::vector<galaxy> &gals, cosmology &cosmo, vec3<double> &
         if (pos.y > r_max.y) r_max.y = pos.y;
         if (pos.z > r_max.z) r_max.z = pos.z;
     }
+    gsl_integration_workspace_free(ws);
     L.x = r_max.x - r_min.x;
     L.y = r_max.y - r_min.y;
     L.z = r_max.z - r_min.z;
@@ -100,9 +111,11 @@ void readDR12(std::string file, std::vector<double> &delta, vec3<int> N, vec3<do
     
 //     vec3<double> r_min = getRMin(gals, cosmo, L);
     
+    gsl_integration_workspace *ws = gsl_integration_workspace_alloc(10000000);
     for (size_t i = 0; i < gals.size(); ++i) {
-        gals[i].bin(delta, N, L, r_min, cosmo, pk_nbw, bk_nbw);
+        gals[i].bin(delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, ws);
     }
+    gsl_integration_workspace_free(ws);
 }
 
 void readDR12Ran(std::string file, std::vector<double> &delta, vec3<int> N, vec3<double> &L, 
@@ -112,9 +125,14 @@ void readDR12Ran(std::string file, std::vector<double> &delta, vec3<int> N, vec3
     
     r_min = getRMin(rans, cosmo, L);
     
+//     std::cout << "      Binning the randoms..." << std::endl;
+    gsl_integration_workspace *ws = gsl_integration_workspace_alloc(10000000);
     for (size_t i = 0; i < rans.size(); ++i) {
-        rans[i].bin(delta, N, L, r_min, cosmo, pk_nbw, bk_nbw);
+//         std::cout << "\r" << i;
+        rans[i].bin(delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, ws);
     }
+    gsl_integration_workspace_free(ws);
+    std::cout << std::endl;
 }
 
 void readPatchy(std::string file, std::vector<double> &delta, vec3<int> N, vec3<double> L, 
@@ -131,10 +149,11 @@ void readPatchy(std::string file, std::vector<double> &delta, vec3<int> N, vec3<
     }
     
 //     vec3<double> r_min = getRMin(gals, cosmo, L);
-    
+    gsl_integration_workspace *ws = gsl_integration_workspace_alloc(10000000);
     for (size_t i = 0; i < gals.size(); ++i) {
-        gals[i].bin(delta, N, L, r_min, cosmo, pk_nbw, bk_nbw);
+        gals[i].bin(delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, ws);
     }
+    gsl_integration_workspace_free(ws);
 }
 
 void readPatchyRan(std::string file, std::vector<double> &delta, vec3<int> N, vec3<double> &L, 
@@ -152,9 +171,11 @@ void readPatchyRan(std::string file, std::vector<double> &delta, vec3<int> N, ve
     
     r_min = getRMin(rans, cosmo, L);
     
+    gsl_integration_workspace *ws = gsl_integration_workspace_alloc(10000000);
     for (size_t i = 0; i < rans.size(); ++i) {
-        rans[i].bin(delta, N, L, r_min, cosmo, pk_nbw, bk_nbw);
+        rans[i].bin(delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, ws);
     }
+    gsl_integration_workspace_free(ws);
 }
 
 void setFileType(std::string typeString, FileType &type) {
@@ -196,7 +217,7 @@ void readFile(std::string file, std::vector<double> &delta, vec3<int> N, vec3<do
     }
 }
 
-void writeBispectrumFile(std::string file, std::vector<vec3<double>> ks, std::vector<double> B) {
+void writeBispectrumFile(std::string file, std::vector<vec3<double>> &ks, std::vector<double> &B) {
     std::ofstream fout(file);
     for (size_t i = 0; i < B.size(); ++i) {
         fout << ks[i].x << " " << ks[i].y << " " << ks[i].z << " " << B[i] << "\n";
@@ -215,6 +236,14 @@ void writeShellFile(std::string file, std::vector<double> &shell, vec3<int> N) {
                 fout.write((char *) &shell[index], sizeof(double));
             }
         }
+    }
+    fout.close();
+}
+
+void writePowerSpectrumFile(std::string file, std::vector<double> &ks, std::vector<double> &P) {
+    std::ofstream fout(file);
+    for (int i = 0; i < ks.size(); ++i) {
+        fout << ks[i] << " " << P[i] << "\n";
     }
     fout.close();
 }

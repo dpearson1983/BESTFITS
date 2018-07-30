@@ -52,11 +52,14 @@ int main(int argc, char *argv[]) {
         std::vector<double> ran(N.x*N.y*N.z);
         std::vector<double> gal(N.x*N.y*N.z);
         
+        std::cout << "   Getting randoms..." << std::endl;
         readFile(p.gets("randomsFile"), ran, N, L, r_min, cosmo, ran_pk_nbw, ran_bk_nbw, ranFileType);
+        std::cout << "   Getting galaxies..." << std::endl;
         readFile(p.gets("dataFile"), gal, N, L, r_min, cosmo, gal_pk_nbw, gal_bk_nbw, dataFileType);
         
         alpha = gal_pk_nbw.x/ran_pk_nbw.x;
         
+        std::cout << "   Computing overdensity..." << std::endl;
         #pragma omp parallel for
         for (size_t i = 0; i < N.x; ++i) {
             for (size_t j = 0; j < N.y; ++j) {
@@ -96,6 +99,7 @@ int main(int argc, char *argv[]) {
     double PkShotNoise = gal_pk_nbw.y + alpha*ran_bk_nbw.y;
     binFrequencies((fftw_complex *)delta.data(), P, N_k, N, kx, ky, kz, delta_k, k_min, k_max,
                    PkShotNoise);
+    normalizePower(P, N_k, gal_pk_nbw.z);
     
     std::cout << "Selecting frequency shells, inverse transforming, and outputting to files..." << std::endl;
     std::vector<double> ks;
@@ -108,6 +112,8 @@ int main(int argc, char *argv[]) {
         writeShellFile(shellFile, shell, N);
         ks.push_back(k);
     }
+    
+    writePowerSpectrumFile(p.gets("pkFile"), ks, P);
     
     std::cout << "Computing the bispectrum monopole..." << std::endl;
     std::vector<double> B;
