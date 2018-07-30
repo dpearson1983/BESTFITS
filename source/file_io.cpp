@@ -68,7 +68,7 @@ void getDR12Rans(std::string file, std::vector<galaxy> &gals) {
 //     std::cout << "\n" << "      Number of randoms = " << gals.size() << std::endl;
 }
 
-vec3<double> getRMin(std::vector<galaxy> &gals, cosmology &cosmo, vec3<double> &L) {
+vec3<double> getRMin(std::vector<galaxy> &gals, cosmology &cosmo, vec3<int> N, vec3<double> &L) {
     vec3<double> r_min = {1E17, 1E17, 1E17};
     vec3<double> r_max = {-1E17, -1E17, -1E17};
     gsl_integration_workspace *ws = gsl_integration_workspace_alloc(10000000);
@@ -84,22 +84,55 @@ vec3<double> getRMin(std::vector<galaxy> &gals, cosmology &cosmo, vec3<double> &
         if (pos.z > r_max.z) r_max.z = pos.z;
     }
     gsl_integration_workspace_free(ws);
+    
+    std::ofstream fout("grid_properties.log");
+    
     L.x = r_max.x - r_min.x;
     L.y = r_max.y - r_min.y;
     L.z = r_max.z - r_min.z;
     
-    double length = L.x;
-    if (L.y > length) length = L.y;
-    if (L.z > length) length = L.z;
+    fout << "Minimum box dimensions:";
+    fout << "   L.x = " << L.x << "\n";
+    fout << "   L.y = " << L.y << "\n";
+    fout << "   L.z = " << L.z << "\n";
     
-    int num = int(pow(2,int(log2(length/3.5)) + 1));
-    length = num*3.5;
+    double resx = L.x/N.x;
+    double resy = L.y/N.y;
+    double resz = L.z/N.z;
     
-    r_min.x -= (length - L.x)/2.0;
-    r_min.y -= (length - L.y)/2.0;
-    r_min.z -= (length - L.z)/2.0;
+    fout << "\nRaw resolutions:";
+    fout << " res.x = " << resx << "\n";
+    fout << " res.y = " << resy << "\n";
+    fout << " res.z = " << resz << "\n";
     
-    L.x = L.y = L.z = length;
+    double resolution = resx;
+    if (resy > resolution) resolution = resy;
+    if (resz > resolution) resolution = resz;
+    
+    resolution = floor(resolution*2 + 0.5)/2;
+    
+    fout << "\nAdopted resolution:";
+    fout << "   resolution = " << resolution << "\n";
+    
+    // Centering the sample
+    r_min.x -= (resolution*N.x - L.x)/2.0;
+    r_min.y -= (resolution*N.y - L.y)/2.0;
+    r_min.z -= (resolution*N.z - L.z)/2.0;
+    
+    fout << "\nMinimum box position:";
+    fout << "   r_min.x = " << r_min.x << "\n";
+    fout << "   r_min.y = " << r_min.y << "\n";
+    fout << "   r_min.z = " << r_min.z << "\n";
+    
+    L.x = resolution*N.x;
+    L.y = resolution*N.y;
+    L.z = resolution*N.z;
+    
+    fout << "\nFinal box dimensions:";
+    fout << "   L.x = " << L.x << "\n";
+    fout << "   L.y = " << L.y << "\n";
+    fout << "   L.z = " << L.z << "\n";
+    fout.close();
     
     return r_min;
 }
@@ -123,7 +156,7 @@ void readDR12Ran(std::string file, std::vector<double> &delta, vec3<int> N, vec3
     std::vector<galaxy> rans;
     getDR12Rans(file, rans);
     
-    r_min = getRMin(rans, cosmo, L);
+    r_min = getRMin(rans, cosmo, N, L);
     
 //     std::cout << "      Binning the randoms..." << std::endl;
     gsl_integration_workspace *ws = gsl_integration_workspace_alloc(10000000);
@@ -169,7 +202,7 @@ void readPatchyRan(std::string file, std::vector<double> &delta, vec3<int> N, ve
         rans.push_back(ran);
     }
     
-    r_min = getRMin(rans, cosmo, L);
+    r_min = getRMin(rans, cosmo, N, L);
     
     gsl_integration_workspace *ws = gsl_integration_workspace_alloc(10000000);
     for (size_t i = 0; i < rans.size(); ++i) {
