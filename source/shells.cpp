@@ -1,3 +1,4 @@
+#include <fstream>
 #include <vector>
 #include <sstream>
 #include <string>
@@ -6,6 +7,8 @@
 #include <omp.h>
 #include "../include/tpods.h"
 #include "../include/shells.h"
+#include "../include/file_io.h"
+#include "../include/transformers.h"
 
 #ifndef PI
 #define PI 3.1415926535897932384626433832795
@@ -41,7 +44,8 @@ void get_shell(fftw_complex *shell, fftw_complex *dk,
     }
 }
 
-double get_bispectrum(std::vector<double> &r_1, std::vector<double> &r_2, std::vector<double> &r_3) {
+double shell_prod(std::vector<double> &r_1, std::vector<double> &r_2, std::vector<double> &r_3,
+                      vec3<int> N) {
     if (r_1.size() == r_2.size() && r_2.size() == r_3.size()) {
         std::vector<double> result(omp_get_max_threads());
         #pragma omp parallel for
@@ -162,16 +166,16 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
     std::vector<double> shell_3(N.x*N.y*2*(N.z/2 + 1));
     vec3<double> kt;
     for (int i = 0; i < ks.size(); ++i) {
-        get_shell(shell_1, delta, kx, ky, kz, ks[i], delta_k, N);
+        get_shell((fftw_complex *) shell_1.data(), (fftw_complex *) delta.data(), kx, ky, kz, ks[i], delta_k, N);
         bip_c2r(shell_1, N, wisdomFile, omp_get_max_threads());
         kt.x = ks[i];
         for (int j = i; j < ks.size(); ++j) {
-            get_shell(shell_2, delta, kx, ky, kz, ks[j], delta_k, N);
+            get_shell((fftw_complex *) shell_2.data(), (fftw_complex *) delta.data(), kx, ky, kz, ks[j], delta_k, N);
             bip_c2r(shell_2, N, wisdomFile, omp_get_max_threads());
             kt.y = ks[j];
             for (int k = j; k < ks.size(); ++k) {
-                get_shell(shell_3, delta, kx, ky, kz, ks[k], delta_k, N);
-                bipc2r(shell_3, N, wisdomFile, omp_get_max_threads());
+                get_shell((fftw_complex *) shell_3.data(), (fftw_complex *) delta.data(), kx, ky, kz, ks[k], delta_k, N);
+                bip_c2r(shell_3, N, wisdomFile, omp_get_max_threads());
                 kt.z = ks[k];
                 
                 double B_est = shell_prod(shell_1, shell_2, shell_3, N);

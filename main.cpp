@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 #include <cmath>
+#include <fftw3.h>
 #include <omp.h>
 #include "include/file_io.h"
 #include "include/cic.h"
