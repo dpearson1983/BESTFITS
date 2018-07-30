@@ -1,3 +1,4 @@
+#include <iostream>
 #include <fstream>
 #include <vector>
 #include <sstream>
@@ -174,16 +175,19 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
             bip_c2r(shell_2, N, wisdomFile, omp_get_max_threads());
             kt.y = ks[j];
             for (int k = j; k < ks.size(); ++k) {
-                get_shell((fftw_complex *) shell_3.data(), (fftw_complex *) delta.data(), kx, ky, kz, ks[k], delta_k, N);
-                bip_c2r(shell_3, N, wisdomFile, omp_get_max_threads());
-                kt.z = ks[k];
-                
-                double B_est = shell_prod(shell_1, shell_2, shell_3, N);
-                B_est -= (P[i] + P[j] + P[k])*gal_bk_nbw.y;
-                B_est -= gal_bk_nbw.x - alpha*alpha*ran_bk_nbw.x;
-                B_est /= gal_bk_nbw.z;
-                B.push_back(B_est);
-                k_trip.push_back(kt);
+                if (ks[j] <= ks[i] + ks[j]) {
+                    std::cout << kt.x << ", " << kt.y << ", " << kt.z << std::endl;
+                    get_shell((fftw_complex *) shell_3.data(), (fftw_complex *) delta.data(), kx, ky, kz, ks[k], delta_k, N);
+                    bip_c2r(shell_3, N, wisdomFile, omp_get_max_threads());
+                    kt.z = ks[k];
+                    
+                    double B_est = shell_prod(shell_1, shell_2, shell_3, N);
+                    B_est -= (P[i] + P[j] + P[k])*gal_bk_nbw.y;
+                    B_est -= gal_bk_nbw.x - alpha*alpha*ran_bk_nbw.x;
+                    B_est /= gal_bk_nbw.z;
+                    B.push_back(B_est);
+                    k_trip.push_back(kt);
+                }
             }
         }
     }
