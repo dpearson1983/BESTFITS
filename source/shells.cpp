@@ -176,7 +176,7 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
             kt.y = ks[j];
             for (int k = j; k < ks.size(); ++k) {
                 if (ks[k] <= ks[i] + ks[j]) {
-                    std::cout << kt.x << ", " << kt.y << ", " << kt.z << std::endl;
+                    std::cout << ks[i] << ", " << ks[j] << ", " << ks[k] << std::endl;
                     get_shell((fftw_complex *) shell_3.data(), (fftw_complex *) delta.data(), kx, ky, kz, ks[k], delta_k, N);
                     bip_c2r(shell_3, N, wisdomFile, omp_get_max_threads());
                     kt.z = ks[k];
