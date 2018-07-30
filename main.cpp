@@ -54,9 +54,11 @@ int main(int argc, char *argv[]) {
         std::vector<double> gal(N.x*N.y*N.z);
         
         std::cout << "   Getting randoms..." << std::endl;
-        readFile(p.gets("randomsFile"), ran, N, L, r_min, cosmo, ran_pk_nbw, ran_bk_nbw, ranFileType);
+        readFile(p.gets("randomsFile"), ran, N, L, r_min, cosmo, ran_pk_nbw, ran_bk_nbw, 
+                 p.getd("z_min"), p.getd("z_max"), ranFileType);
         std::cout << "   Getting galaxies..." << std::endl;
-        readFile(p.gets("dataFile"), gal, N, L, r_min, cosmo, gal_pk_nbw, gal_bk_nbw, dataFileType);
+        readFile(p.gets("dataFile"), gal, N, L, r_min, cosmo, gal_pk_nbw, gal_bk_nbw, p.getd("z_min"),
+                 p.getd("z_max"), dataFileType);
         
         alpha = gal_pk_nbw.x/ran_pk_nbw.x;
         

@@ -10,7 +10,7 @@
 #include "../include/galaxy.h"
 #include "../include/cosmology.h"
 
-void getDR12Gals(std::string file, std::vector<galaxy> &gals) {
+void getDR12Gals(std::string file, std::vector<galaxy> &gals, double z_min, double z_max) {
     std::unique_ptr<CCfits::FITS> pInfile(new CCfits::FITS(file, CCfits::Read, false));
     
     CCfits::ExtHDU &table = pInfile->extension(1);
@@ -32,12 +32,14 @@ void getDR12Gals(std::string file, std::vector<galaxy> &gals) {
     table.column("WEIGHT_SYSTOT").read(w_sys, start, end);
     
     for (size_t i = 0; i < ra.size(); ++i) {
-        galaxy gal(ra[i], dec[i], red[i], nz[i], w_sys[i]*w_fkp[i]);
-        gals.push_back(gal);
+        if (red[i] >= z_min && red[i] < z_max) {
+            galaxy gal(ra[i], dec[i], red[i], nz[i], w_sys[i]*w_fkp[i]);
+            gals.push_back(gal);
+        }
     }
 }
 
-void getDR12Rans(std::string file, std::vector<galaxy> &gals) {
+void getDR12Rans(std::string file, std::vector<galaxy> &gals, double z_min, double z_max) {
 //     std::cout << "      Reading randoms from a DR12 fits file..." << std::endl;
     std::unique_ptr<CCfits::FITS> pInfile(new CCfits::FITS(file, CCfits::Read, false));
     
@@ -62,8 +64,10 @@ void getDR12Rans(std::string file, std::vector<galaxy> &gals) {
 //     std::cout << "      Adding randoms to a vector..." << std::endl;
     for (size_t i = 0; i < ra.size(); ++i) {
 //         std::cout << "\r" << i;
-        galaxy gal(ra[i], dec[i], red[i], nz[i], w_fkp[i]);
-        gals.push_back(gal);
+        if (red[i] >= z_min && red[i] < z_max) {
+            galaxy gal(ra[i], dec[i], red[i], nz[i], w_fkp[i]);
+            gals.push_back(gal);
+        }
     }
 //     std::cout << "\n" << "      Number of randoms = " << gals.size() << std::endl;
 }
@@ -138,9 +142,10 @@ vec3<double> getRMin(std::vector<galaxy> &gals, cosmology &cosmo, vec3<int> N, v
 }
 
 void readDR12(std::string file, std::vector<double> &delta, vec3<int> N, vec3<double> L, 
-              vec3<double> r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw) {
+              vec3<double> r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw, 
+              double z_min, double z_max) {
     std::vector<galaxy> gals;
-    getDR12Gals(file, gals);
+    getDR12Gals(file, gals, z_min, z_max);
     
 //     vec3<double> r_min = getRMin(gals, cosmo, L);
     
@@ -152,9 +157,10 @@ void readDR12(std::string file, std::vector<double> &delta, vec3<int> N, vec3<do
 }
 
 void readDR12Ran(std::string file, std::vector<double> &delta, vec3<int> N, vec3<double> &L, 
-              vec3<double> &r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw) {
+              vec3<double> &r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw, 
+              double z_min, double z_max) {
     std::vector<galaxy> rans;
-    getDR12Rans(file, rans);
+    getDR12Rans(file, rans, z_min, z_max);
     
     r_min = getRMin(rans, cosmo, N, L);
     
@@ -169,17 +175,21 @@ void readDR12Ran(std::string file, std::vector<double> &delta, vec3<int> N, vec3
 }
 
 void readPatchy(std::string file, std::vector<double> &delta, vec3<int> N, vec3<double> L, 
-                vec3<double> r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw) {
+                vec3<double> r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw,
+                double z_min, double z_max) {
     std::vector<galaxy> gals;
     
     std::ifstream fin(file);
     while (!fin.eof()) {
         double ra, dec, red, mstar, nbar, bias, veto_flag, fiber_collision;
         fin >> ra >> dec >> red >> mstar >> nbar >> bias >> veto_flag >> fiber_collision;
-        double w_fkp = (veto_flag*fiber_collision)/(1.0 + nbar*10000.0);
-        galaxy gal(ra, dec, red, nbar, w_fkp);
-        gals.push_back(gal);
+        if (red >= z_min && red < z_max) {
+            double w_fkp = (veto_flag*fiber_collision)/(1.0 + nbar*10000.0);
+            galaxy gal(ra, dec, red, nbar, w_fkp);
+            gals.push_back(gal);
+        }
     }
+    fin.close();
     
 //     vec3<double> r_min = getRMin(gals, cosmo, L);
     gsl_integration_workspace *ws = gsl_integration_workspace_alloc(10000000);
@@ -190,17 +200,21 @@ void readPatchy(std::string file, std::vector<double> &delta, vec3<int> N, vec3<
 }
 
 void readPatchyRan(std::string file, std::vector<double> &delta, vec3<int> N, vec3<double> &L, 
-                vec3<double> &r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw) {
+                vec3<double> &r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw, 
+                double z_min, double z_max) {
     std::vector<galaxy> rans;
     
     std::ifstream fin(file);
     while (!fin.eof()) {
         double ra, dec, red, nbar, bias, veto_flag, fiber_collision;
         fin >> ra >> dec >> red >> nbar >> bias >> veto_flag >> fiber_collision;
-        double w_fkp = (veto_flag*fiber_collision)/(1.0 + nbar*10000.0);
-        galaxy ran(ra, dec, red, nbar, w_fkp);
-        rans.push_back(ran);
+        if (red >= z_min && red < z_max) {
+            double w_fkp = (veto_flag*fiber_collision)/(1.0 + nbar*10000.0);
+            galaxy ran(ra, dec, red, nbar, w_fkp);
+            rans.push_back(ran);
+        }
     }
+    fin.close();
     
     r_min = getRMin(rans, cosmo, N, L);
     
@@ -229,19 +243,19 @@ void setFileType(std::string typeString, FileType &type) {
 
 void readFile(std::string file, std::vector<double> &delta, vec3<int> N, vec3<double> &L, 
               vec3<double> &r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw,
-              FileType type) {
+              double z_min, double z_max, FileType type) {
     switch(type) {
         case dr12:
-            readDR12(file, delta, N, L, r_min, cosmo, pk_nbw, bk_nbw);
+            readDR12(file, delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
             break;
         case patchy:
-            readPatchy(file, delta, N, L, r_min, cosmo, pk_nbw, bk_nbw);
+            readPatchy(file, delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
             break;
         case dr12_ran:
-            readDR12Ran(file, delta, N, L, r_min, cosmo, pk_nbw, bk_nbw);
+            readDR12Ran(file, delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
             break;
         case patchy_ran:
-            readPatchyRan(file, delta, N, L, r_min, cosmo, pk_nbw, bk_nbw);
+            readPatchyRan(file, delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
         default:
             std::stringstream err_msg;
             err_msg << "Unrecognized or unsupported file type.\n";

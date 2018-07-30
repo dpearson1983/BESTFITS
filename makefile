@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -fopenmp -march=bdver4 -O3
+CXXFLAGS = -fopenmp -march=native -mtune=native -O3
 LIBFFTW = -lfftw3 -lfftw3_omp
 LIBFITS = -lCCfits -lcfitsio
 LIBGSL = -lgsl -lgslcblas -lm
