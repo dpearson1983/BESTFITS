@@ -102,26 +102,40 @@ int main(int argc, char *argv[]) {
                    PkShotNoise);
     normalizePower(P, N_k, gal_pk_nbw.z);
     
-    std::cout << "Selecting frequency shells, inverse transforming, and outputting to files..." << std::endl;
-    std::vector<double> ks;
-    for (int i = 0; i < num_k_bins; ++i) {
-        double k = k_min + (i + 0.5)*delta_k;
-        get_shell((fftw_complex *)shell.data(), (fftw_complex *)delta.data(), kx, ky, kz, k, delta_k,
-                  N);
-        bip_c2r(shell, N, p.gets("wisdomFile"), omp_get_max_threads());
-        std::string shellFile = filename(p.gets("shellBase"), 2, i, p.gets("shellExt"));
-        writeShellFile(shellFile, shell, N);
-        ks.push_back(k);
+    if (p.getb("lowMemoryMode")) {
+        std::cout << "Selecting frequency shells, inverse transforming, and outputting to files..." << std::endl;
+        std::vector<double> ks;
+        for (int i = 0; i < num_k_bins; ++i) {
+            double k = k_min + (i + 0.5)*delta_k;
+            get_shell((fftw_complex *)shell.data(), (fftw_complex *)delta.data(), kx, ky, kz, k, 
+                      delta_k, N);
+            bip_c2r(shell, N, p.gets("wisdomFile"), omp_get_max_threads());
+            std::string shellFile = filename(p.gets("shellBase"), 2, i, p.gets("shellExt"));
+            writeShellFile(shellFile, shell, N);
+            ks.push_back(k);
+        }
+        
+        writePowerSpectrumFile(p.gets("pkFile"), ks, P);
+        
+        std::cout << "Computing the bispectrum monopole..." << std::endl;
+        std::vector<double> B;
+        std::vector<vec3<double>> k_trip;
+        get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, alpha, B, k_trip, p.gets("shellBase"), 
+                       p.gets("shellExt"));
+        writeBispectrumFile(p.gets("outFile"), k_trip, B);
+    } else {
+        std::vector<double> ks;
+        for (int i = 0; i < num_k_bins; ++i) {
+            double k = k_min + (i + 0.5)*delta_k;
+            ks.push_back(k);
+        }
+        
+        std::vector<double> B;
+        std::vector<vec3<double>> k_trip;
+        get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, alpha, B, k_trip, delta, kx, ky, kz, delta_k, 
+                       p.gets("wisdomFile"));
+        writeBispectrumFile(p.gets("outFile"), k_trip, B);
     }
-    
-    writePowerSpectrumFile(p.gets("pkFile"), ks, P);
-    
-    std::cout << "Computing the bispectrum monopole..." << std::endl;
-    std::vector<double> B;
-    std::vector<vec3<double>> k_trip;
-    get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, alpha, B, k_trip, p.gets("shellBase"), 
-                   p.gets("shellExt"));
-    writeBispectrumFile(p.gets("outFile"), k_trip, B);
     
     return 0;
 }
