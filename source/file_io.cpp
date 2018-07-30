@@ -95,7 +95,7 @@ vec3<double> getRMin(std::vector<galaxy> &gals, cosmology &cosmo, vec3<int> N, v
     L.y = r_max.y - r_min.y;
     L.z = r_max.z - r_min.z;
     
-    fout << "Minimum box dimensions:";
+    fout << "Minimum box dimensions:\n";
     fout << "   L.x = " << L.x << "\n";
     fout << "   L.y = " << L.y << "\n";
     fout << "   L.z = " << L.z << "\n";
@@ -104,7 +104,7 @@ vec3<double> getRMin(std::vector<galaxy> &gals, cosmology &cosmo, vec3<int> N, v
     double resy = L.y/N.y;
     double resz = L.z/N.z;
     
-    fout << "\nRaw resolutions:";
+    fout << "\nRaw resolutions:\n";
     fout << " res.x = " << resx << "\n";
     fout << " res.y = " << resy << "\n";
     fout << " res.z = " << resz << "\n";
@@ -115,7 +115,7 @@ vec3<double> getRMin(std::vector<galaxy> &gals, cosmology &cosmo, vec3<int> N, v
     
     resolution = floor(resolution*2 + 0.5)/2;
     
-    fout << "\nAdopted resolution:";
+    fout << "\nAdopted resolution:\n";
     fout << "   resolution = " << resolution << "\n";
     
     // Centering the sample
@@ -123,7 +123,7 @@ vec3<double> getRMin(std::vector<galaxy> &gals, cosmology &cosmo, vec3<int> N, v
     r_min.y -= (resolution*N.y - L.y)/2.0;
     r_min.z -= (resolution*N.z - L.z)/2.0;
     
-    fout << "\nMinimum box position:";
+    fout << "\nMinimum box position:\n";
     fout << "   r_min.x = " << r_min.x << "\n";
     fout << "   r_min.y = " << r_min.y << "\n";
     fout << "   r_min.z = " << r_min.z << "\n";
@@ -132,7 +132,7 @@ vec3<double> getRMin(std::vector<galaxy> &gals, cosmology &cosmo, vec3<int> N, v
     L.y = resolution*N.y;
     L.z = resolution*N.z;
     
-    fout << "\nFinal box dimensions:";
+    fout << "\nFinal box dimensions:\n";
     fout << "   L.x = " << L.x << "\n";
     fout << "   L.y = " << L.y << "\n";
     fout << "   L.z = " << L.z << "\n";
@@ -266,6 +266,7 @@ void readFile(std::string file, std::vector<double> &delta, vec3<int> N, vec3<do
 
 void writeBispectrumFile(std::string file, std::vector<vec3<double>> &ks, std::vector<double> &B) {
     std::ofstream fout(file);
+    fout.precision(15);
     for (size_t i = 0; i < B.size(); ++i) {
         fout << ks[i].x << " " << ks[i].y << " " << ks[i].z << " " << B[i] << "\n";
     }
@@ -289,6 +290,7 @@ void writeShellFile(std::string file, std::vector<double> &shell, vec3<int> N) {
 
 void writePowerSpectrumFile(std::string file, std::vector<double> &ks, std::vector<double> &P) {
     std::ofstream fout(file);
+    fout.precision(15);
     for (int i = 0; i < ks.size(); ++i) {
         fout << ks[i] << " " << P[i] << "\n";
     }
