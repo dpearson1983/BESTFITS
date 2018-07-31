@@ -64,7 +64,7 @@ double shell_prod(std::vector<double> &r_1, std::vector<double> &r_2, std::vecto
         result[0] += result[i];
     
     double N_tot = N.x*N.y*N.z;
-    return result[0]/(N_tot*N_tot*N_tot);
+    return result[0]/(N_tot*N_tot);
 }
 
 double shell_prod(std::string k1File, std::string k2File, std::string k3File, vec3<int> N) {
