@@ -27,7 +27,7 @@ double get_V_f(vec3<double> L) {
 void get_shell(fftw_complex *shell, fftw_complex *dk, 
                std::vector<double> &kx, std::vector<double> &ky, std::vector<double> &kz, 
                double k_shell, double delta_k, vec3<int> N) {
-    #pragma omp parallel for
+//     #pragma omp parallel for
     for (int i = 0; i < N.x; ++i) {
         for (int j = 0; j < N.y; ++j) {
             for (int k = 0; k <= N.z/2; ++k) {
