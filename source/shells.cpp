@@ -199,7 +199,7 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
                     B.push_back(B_est);
                     k_trip.push_back(kt);
                     std::cout << ks[i] << ", " << ks[j] << ", " << ks[k] << ", " << V_f/V_ijk;
-                    std::cout << ", " << SN << std::endl;
+                    std::cout << ", " << SN/gal_bk_nbw.z << std::endl;
                 }
             }
         }
