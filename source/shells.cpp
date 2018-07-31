@@ -63,7 +63,7 @@ double shell_prod(std::vector<double> &r_1, std::vector<double> &r_2, std::vecto
         for (int i = 1; i < omp_get_max_threads(); ++i)
             result[0] += result[i];
         
-        return result[0];
+        return result[0]/(N.x*N.y*N.z);
     } else {
         std::stringstream err_msg;
         err_msg << "Array size mismatch.\n";
@@ -173,11 +173,13 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
     double V_f = get_V_f(L);
     vec3<double> kt;
     for (int i = 0; i < ks.size(); ++i) {
-        get_shell((fftw_complex *) shell_1.data(), (fftw_complex *) delta.data(), kx, ky, kz, ks[i], delta_k, N);
+        get_shell((fftw_complex *) shell_1.data(), (fftw_complex *) delta.data(), kx, ky, kz, ks[i], 
+                  delta_k, N);
         bip_c2r(shell_1, N, wisdomFile, omp_get_max_threads());
         kt.x = ks[i];
         for (int j = i; j < ks.size(); ++j) {
-            get_shell((fftw_complex *) shell_2.data(), (fftw_complex *) delta.data(), kx, ky, kz, ks[j], delta_k, N);
+            get_shell((fftw_complex *) shell_2.data(), (fftw_complex *) delta.data(), kx, ky, kz, ks[j], 
+                      delta_k, N);
             bip_c2r(shell_2, N, wisdomFile, omp_get_max_threads());
             kt.y = ks[j];
             for (int k = j; k < ks.size(); ++k) {
