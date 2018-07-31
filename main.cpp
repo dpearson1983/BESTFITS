@@ -105,6 +105,7 @@ int main(int argc, char *argv[]) {
     normalizePower(P, N_k, gal_pk_nbw.z);
     
     normalize_delta(delta, N);
+    std::cout << gal_bk_nbw.z << std::endl;
     
     if (p.getb("lowMemoryMode")) {
         std::cout << "Selecting frequency shells, inverse transforming, and outputting to files..." << std::endl;
