@@ -16,8 +16,8 @@
 #endif
 
 double get_V_ijk(double k_i, double k_j, double k_k, double delta_k) {
-    return (k_i*k_j*k_k*delta_k*delta_k*delta_k)/(8.0*PI*PI*PI*PI);
-//     return 8.0*PI*PI*(k_i*k_j*k_k*delta_k*delta_k*delta_k);
+//     return (k_i*k_j*k_k*delta_k*delta_k*delta_k)/(8.0*PI*PI*PI*PI);
+    return 8.0*PI*PI*(k_i*k_j*k_k*delta_k*delta_k*delta_k);
 }
 
 double get_V_f(vec3<double> L) {
@@ -182,6 +182,7 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
                 if (ks[k] <= ks[i] + ks[j]) {
                     std::cout << ks[i] << ", " << ks[j] << ", " << ks[k] << ", ";
                     double V_ijk = get_V_ijk(ks[i], ks[j], ks[k], delta_k);
+                    std::cout << V_ijk << ", ";
                     get_shell((fftw_complex *) shell_3.data(), (fftw_complex *) delta.data(), kx, ky, 
                               kz, ks[k], delta_k, N);
                     bip_c2r(shell_3, N, wisdomFile, omp_get_max_threads());
@@ -192,7 +193,7 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
                     B_est /= gal_bk_nbw.z;
                     std::cout << B_est << ", ";
                     double SN = ((P[i] + P[j] + P[k])*gal_bk_nbw.y + gal_bk_nbw.x - alpha*alpha*ran_bk_nbw.x)/gal_bk_nbw.z;
-                    B_est *= V_f/V_ijk;
+                    B_est *= 1.0/V_ijk;
                     std::cout << B_est << ", ";
                     B_est -= SN;
                     std::cout << B_est << std::endl;
