@@ -107,22 +107,21 @@ int main(int argc, char *argv[]) {
     normalize_delta(delta, N);
     std::cout << gal_bk_nbw.z << std::endl;
     
+    std::cout << "Selecting frequencies..." << std::endl;
+    std::vector<double> ks;
+    for (int i = 0; i < num_k_bins; ++i) {
+        double k = k_min + (i + 0.5)*delta_k;
+        ks.push_back(k);
+    }
     
-        std::cout << "Selecting frequencies..." << std::endl;
-        std::vector<double> ks;
-        for (int i = 0; i < num_k_bins; ++i) {
-            double k = k_min + (i + 0.5)*delta_k;
-            ks.push_back(k);
-        }
-        
-        writePowerSpectrumFile(p.gets("pkFile"), ks, P);
-        
-        std::vector<double> B;
-        std::vector<vec3<double>> k_trip;
-        std::cout << "Computing the bispectrum monopole..." << std::endl;
-        get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B, k_trip, delta, kx, ky, kz, 
-                       delta_k, p.gets("wisdomFile"));
-        writeBispectrumFile(p.gets("outFile"), k_trip, B);
+    writePowerSpectrumFile(p.gets("pkFile"), ks, P);
+    
+    std::vector<double> B;
+    std::vector<vec3<double>> k_trip;
+    std::cout << "Computing the bispectrum monopole..." << std::endl;
+    get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B, k_trip, delta, kx, ky, kz, 
+                   delta_k, p.gets("wisdomFile"));
+    writeBispectrumFile(p.gets("outFile"), k_trip, B);
     
     return 0;
 }
