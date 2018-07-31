@@ -191,9 +191,9 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
                     kt.z = ks[k];
                     
                     double B_est = shell_prod(shell_1, shell_2, shell_3, N);
+                    double SN = (P[i] + P[j] + P[k])*gal_bk_nbw.y + gal_bk_nbw.x - alpha*alpha*ran_bk_nbw.x;
                     B_est *= V_f/V_ijk;
-                    B_est -= (P[i] + P[j] + P[k])*gal_bk_nbw.y;
-                    B_est -= gal_bk_nbw.x - alpha*alpha*ran_bk_nbw.x;
+                    B_est -= SN;
                     B_est /= gal_bk_nbw.z;
                     B.push_back(B_est);
                     k_trip.push_back(kt);
