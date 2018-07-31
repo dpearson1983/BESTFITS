@@ -50,9 +50,14 @@ double shell_prod(std::vector<double> &r_1, std::vector<double> &r_2, std::vecto
     if (r_1.size() == r_2.size() && r_2.size() == r_3.size()) {
         std::vector<double> result(omp_get_max_threads());
         #pragma omp parallel for
-        for (size_t i = 0; i < r_1.size(); ++i) {
-            int tid = omp_get_thread_num();
-            result[tid] += r_1[i]*r_2[i]*r_3[i];
+        for (size_t i = 0; i < N.x; ++i) {
+            for (size_t j = 0; j < N.y; ++j) {
+                for (size_t k = 0; k < N.z; ++k) {
+                    int tid = omp_get_thread_num();
+                    size_t  index = k + 2*(N.z/2 + 1)*(j + N.y*i);
+                    result[tid] += r_1[index]*r_2[index]*r_3[index];
+                }
+            }
         }
         
         for (int i = 1; i < omp_get_max_threads(); ++i)
@@ -158,13 +163,14 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
 }
 
 void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
-                    vec3<double> ran_bk_nbw, vec3<int> N, double alpha, std::vector<double> &B,
-                    std::vector<vec3<double>> &k_trip, std::vector<double> &delta, 
-                    std::vector<double> &kx, std::vector<double> &ky, std::vector<double> &kz, 
-                    double delta_k, std::string wisdomFile) {
+                    vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
+                    std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
+                    std::vector<double> &delta, std::vector<double> &kx, std::vector<double> &ky, 
+                    std::vector<double> &kz, double delta_k, std::string wisdomFile) {
     std::vector<double> shell_1(N.x*N.y*2*(N.z/2 + 1));
     std::vector<double> shell_2(N.x*N.y*2*(N.z/2 + 1));
     std::vector<double> shell_3(N.x*N.y*2*(N.z/2 + 1));
+    double V_f = get_V_f(L);
     vec3<double> kt;
     for (int i = 0; i < ks.size(); ++i) {
         get_shell((fftw_complex *) shell_1.data(), (fftw_complex *) delta.data(), kx, ky, kz, ks[i], delta_k, N);
@@ -176,12 +182,14 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
             kt.y = ks[j];
             for (int k = j; k < ks.size(); ++k) {
                 if (ks[k] <= ks[i] + ks[j]) {
+                    double V_ijk = get_V_ijk(ks[i], ks[j], ks[k], delta_k);
                     std::cout << ks[i] << ", " << ks[j] << ", " << ks[k] << std::endl;
                     get_shell((fftw_complex *) shell_3.data(), (fftw_complex *) delta.data(), kx, ky, kz, ks[k], delta_k, N);
                     bip_c2r(shell_3, N, wisdomFile, omp_get_max_threads());
                     kt.z = ks[k];
                     
                     double B_est = shell_prod(shell_1, shell_2, shell_3, N);
+                    B_est *= V_f/V_ijk;
                     B_est -= (P[i] + P[j] + P[k])*gal_bk_nbw.y;
                     B_est -= gal_bk_nbw.x - alpha*alpha*ran_bk_nbw.x;
                     B_est /= gal_bk_nbw.z;

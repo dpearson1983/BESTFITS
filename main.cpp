@@ -140,8 +140,8 @@ int main(int argc, char *argv[]) {
         std::vector<double> B;
         std::vector<vec3<double>> k_trip;
         std::cout << "Computing the bispectrum monopole..." << std::endl;
-        get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, alpha, B, k_trip, delta, kx, ky, kz, delta_k, 
-                       p.gets("wisdomFile"));
+        get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B, k_trip, delta, kx, ky, kz, 
+                       delta_k, p.gets("wisdomFile"));
         writeBispectrumFile(p.gets("outFile"), k_trip, B);
     }
     
