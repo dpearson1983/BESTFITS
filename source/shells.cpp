@@ -16,8 +16,8 @@
 #endif
 
 double get_V_ijk(double k_i, double k_j, double k_k, double delta_k) {
-//     return (k_i*k_j*k_k*delta_k*delta_k*delta_k)/(8.0*PI*PI*PI*PI);
-    return 8.0*PI*PI*(k_i*k_j*k_k*delta_k*delta_k*delta_k);
+    return (k_i*k_j*k_k*delta_k*delta_k*delta_k)/(8.0*PI*PI*PI*PI);
+//     return 8.0*PI*PI*(k_i*k_j*k_k*delta_k*delta_k*delta_k);
 }
 
 double get_V_f(vec3<double> L) {
