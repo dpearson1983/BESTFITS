@@ -192,3 +192,10 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
         }
     }
 }
+
+void normalize_delta(std::vector<double> &delta, vec3<int> N) {
+    size_t N_tot = N.x*N.y*N.z;
+    #pragma omp parallel for
+    for (size_t i = 0; i < delta.size(); ++i)
+        delta[i] /= N_tot;
+}

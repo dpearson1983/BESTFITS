@@ -104,6 +104,8 @@ int main(int argc, char *argv[]) {
                    PkShotNoise);
     normalizePower(P, N_k, gal_pk_nbw.z);
     
+    normalize_delta(delta, N);
+    
     if (p.getb("lowMemoryMode")) {
         std::cout << "Selecting frequency shells, inverse transforming, and outputting to files..." << std::endl;
         std::vector<double> ks;

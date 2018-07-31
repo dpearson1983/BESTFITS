@@ -32,4 +32,6 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
                     std::vector<double> &kx, std::vector<double> &ky, std::vector<double> &kz, 
                     double delta_k, std::string wisdomFile);
 
+void normalize_delta(std::vector<double> &delta, vec3<int> N);
+
 #endif
