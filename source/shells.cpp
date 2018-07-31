@@ -63,7 +63,7 @@ double shell_prod(std::vector<double> &r_1, std::vector<double> &r_2, std::vecto
         for (int i = 1; i < omp_get_max_threads(); ++i)
             result[0] += result[i];
         
-        return result[0]/(N.x*N.y*N.z);
+        return result[0];
     } else {
         std::stringstream err_msg;
         err_msg << "Array size mismatch.\n";
