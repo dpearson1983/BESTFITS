@@ -183,8 +183,10 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
             for (int k = j; k < ks.size(); ++k) {
                 if (ks[k] <= ks[i] + ks[j]) {
                     double V_ijk = get_V_ijk(ks[i], ks[j], ks[k], delta_k);
-                    std::cout << ks[i] << ", " << ks[j] << ", " << ks[k] << std::endl;
-                    get_shell((fftw_complex *) shell_3.data(), (fftw_complex *) delta.data(), kx, ky, kz, ks[k], delta_k, N);
+                    std::cout << ks[i] << ", " << ks[j] << ", " << ks[k] << ", " << V_f/V_ijk;
+                    std::cout << std::endl;
+                    get_shell((fftw_complex *) shell_3.data(), (fftw_complex *) delta.data(), kx, ky, 
+                              kz, ks[k], delta_k, N);
                     bip_c2r(shell_3, N, wisdomFile, omp_get_max_threads());
                     kt.z = ks[k];
                     
