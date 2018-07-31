@@ -63,7 +63,7 @@ double shell_prod(std::vector<double> &r_1, std::vector<double> &r_2, std::vecto
     for (int i = 1; i < omp_get_max_threads(); ++i)
         result[0] += result[i];
     
-    size_t N_tot = N.x*N.y*N.z;
+    double N_tot = N.x*N.y*N.z;
     return result[0]/(N_tot*N_tot*N_tot);
 }
 
