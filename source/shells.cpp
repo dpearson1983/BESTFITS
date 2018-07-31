@@ -166,6 +166,7 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
     std::vector<double> shell_2(N.x*N.y*2*(N.z/2 + 1));
     std::vector<double> shell_3(N.x*N.y*2*(N.z/2 + 1));
     double V_f = get_V_f(L);
+    std::cout << V_f << std::endl;
     vec3<double> kt;
     for (int i = 0; i < ks.size(); ++i) {
         get_shell((fftw_complex *) shell_1.data(), (fftw_complex *) delta.data(), kx, ky, kz, ks[i], 
@@ -187,7 +188,7 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
                     
                     double B_est = shell_prod(shell_1, shell_2, shell_3, N);
                     double SN = (P[i] + P[j] + P[k])*gal_bk_nbw.y + gal_bk_nbw.x - alpha*alpha*ran_bk_nbw.x;
-                    B_est *= 1.0/V_ijk;
+                    B_est *= V_f/V_ijk;
                     B_est -= SN;
                     B_est /= gal_bk_nbw.z;
                     B.push_back(B_est);
