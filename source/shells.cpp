@@ -16,8 +16,8 @@
 #endif
 
 double get_V_ijk(double k_i, double k_j, double k_k, double delta_k) {
-//     return (k_i*k_j*k_k*delta_k*delta_k*delta_k)/(8.0*PI*PI*PI*PI);
-    return 8.0*PI*PI*(k_i*k_j*k_k*delta_k*delta_k*delta_k);
+    return (k_i*k_j*k_k*delta_k*delta_k*delta_k)/(8.0*PI*PI*PI*PI);
+//     return 8.0*PI*PI*(k_i*k_j*k_k*delta_k*delta_k*delta_k);
 }
 
 double get_V_f(vec3<double> L) {
@@ -63,8 +63,7 @@ double shell_prod(std::vector<double> &r_1, std::vector<double> &r_2, std::vecto
     for (int i = 1; i < omp_get_max_threads(); ++i)
         result[0] += result[i];
     
-    double N_tot = N.x*N.y*N.z;
-    return result[0]/(N_tot*N_tot);
+    return result[0];
 }
 
 double shell_prod(std::string k1File, std::string k2File, std::string k3File, vec3<int> N) {
@@ -202,7 +201,7 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
 }
 
 void normalize_delta(std::vector<double> &delta, vec3<int> N) {
-    size_t N_tot = N.x*N.y*N.z;
+    double N_tot = N.x*N.y*N.z;
     #pragma omp parallel for
     for (size_t i = 0; i < delta.size(); ++i)
         delta[i] /= N_tot;
