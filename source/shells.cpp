@@ -180,6 +180,7 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
             kt.y = ks[j];
             for (int k = j; k < ks.size(); ++k) {
                 if (ks[k] <= ks[i] + ks[j]) {
+                    std::cout << ks[i] << ", " << ks[j] << ", " << ks[k] << ", ";
                     double V_ijk = get_V_ijk(ks[i], ks[j], ks[k], delta_k);
                     get_shell((fftw_complex *) shell_3.data(), (fftw_complex *) delta.data(), kx, ky, 
                               kz, ks[k], delta_k, N);
@@ -187,14 +188,16 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
                     kt.z = ks[k];
                     
                     double B_est = shell_prod(shell_1, shell_2, shell_3, N);
+                    std::cout << B_est << ", ";
                     double SN = (P[i] + P[j] + P[k])*gal_bk_nbw.y + gal_bk_nbw.x - alpha*alpha*ran_bk_nbw.x;
                     B_est *= 1.0/V_ijk;
+                    std::cout << B_est << ", ";
                     B_est -= SN;
+                    std::cout << B_est << ", ";
                     B_est /= gal_bk_nbw.z;
+                    std::cout << B_est << std::endl;
                     B.push_back(B_est);
                     k_trip.push_back(kt);
-                    std::cout << ks[i] << ", " << ks[j] << ", " << ks[k] << ", " << V_f/V_ijk;
-                    std::cout << ", " << B_est << ", " << SN/gal_bk_nbw.z << std::endl;
                 }
             }
         }
