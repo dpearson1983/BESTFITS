@@ -47,29 +47,23 @@ void get_shell(fftw_complex *shell, fftw_complex *dk,
 }
 
 double shell_prod(std::vector<double> &r_1, std::vector<double> &r_2, std::vector<double> &r_3,
-                      vec3<int> N) {
-    if (r_1.size() == r_2.size() && r_2.size() == r_3.size()) {
-        std::vector<double> result(omp_get_max_threads());
-        #pragma omp parallel for
-        for (size_t i = 0; i < N.x; ++i) {
-            for (size_t j = 0; j < N.y; ++j) {
-                for (size_t k = 0; k < N.z; ++k) {
-                    int tid = omp_get_thread_num();
-                    size_t  index = k + 2*(N.z/2 + 1)*(j + N.y*i);
-                    result[tid] += r_1[index]*r_2[index]*r_3[index];
-                }
+                  vec3<int> N) {
+    std::vector<double> result(omp_get_max_threads());
+    #pragma omp parallel for
+    for (size_t i = 0; i < N.x; ++i) {
+        for (size_t j = 0; j < N.y; ++j) {
+            for (size_t k = 0; k < N.z; ++k) {
+                int tid = omp_get_thread_num();
+                size_t  index = k + 2*(N.z/2 + 1)*(j + N.y*i);
+                result[tid] += r_1[index]*r_2[index]*r_3[index];
             }
         }
-        
-        for (int i = 1; i < omp_get_max_threads(); ++i)
-            result[0] += result[i];
-        
-        return result[0];
-    } else {
-        std::stringstream err_msg;
-        err_msg << "Array size mismatch.\n";
-        throw std::runtime_error(err_msg.str());
     }
+    
+    for (int i = 1; i < omp_get_max_threads(); ++i)
+        result[0] += result[i];
+    
+    return result[0];
 }
 
 double shell_prod(std::string k1File, std::string k2File, std::string k3File, vec3<int> N) {
@@ -199,7 +193,7 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
                     B.push_back(B_est);
                     k_trip.push_back(kt);
                     std::cout << ks[i] << ", " << ks[j] << ", " << ks[k] << ", " << V_f/V_ijk;
-                    std::cout << ", " << SN/gal_bk_nbw.z << std::endl;
+                    std::cout << ", " << B_est << ", " << SN/gal_bk_nbw.z << std::endl;
                 }
             }
         }
