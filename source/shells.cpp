@@ -48,25 +48,23 @@ void get_shell(fftw_complex *shell, fftw_complex *dk,
 
 double shell_prod(std::vector<double> &r_1, std::vector<double> &r_2, std::vector<double> &r_3,
                   vec3<int> N) {
-//     std::vector<double> result(omp_get_max_threads());
-//     #pragma omp parallel for
-    double result = 0;
+    std::vector<double> result(omp_get_max_threads());
+    #pragma omp parallel for
     for (size_t i = 0; i < N.x; ++i) {
         for (size_t j = 0; j < N.y; ++j) {
             for (size_t k = 0; k < N.z; ++k) {
-//                 int tid = omp_get_thread_num();
+                int tid = omp_get_thread_num();
                 size_t  index = k + 2*(N.z/2 + 1)*(j + N.y*i);
-//                 result[tid] += r_1[index]*r_2[index]*r_3[index];
-                result += r_1[index]*r_2[index]*r_3[index];
+                result[tid] += r_1[index]*r_2[index]*r_3[index];
             }
         }
     }
     
-//     for (int i = 1; i < omp_get_max_threads(); ++i)
-//         result[0] += result[i];
+    for (int i = 1; i < omp_get_max_threads(); ++i)
+        result[0] += result[i];
     
-//     return result[0];
-    return result;
+    size_t N_tot = N.x*N.y*N.z;
+    return result[0]/(N_tot*N_tot*N_tot);
 }
 
 double shell_prod(std::string k1File, std::string k2File, std::string k3File, vec3<int> N) {
