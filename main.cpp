@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
                    PkShotNoise);
     normalizePower(P, N_k, gal_pk_nbw.z);
     
-//     normalize_delta(delta, N);
+    normalize_delta(delta, N);
     std::cout << gal_bk_nbw.z << std::endl;
     
     std::cout << "Selecting frequencies..." << std::endl;
