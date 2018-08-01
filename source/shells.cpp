@@ -90,7 +90,7 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
             for (int k = j; k < ks.size(); ++k) {
                 if (ks[k] <= ks[i] + ks[j]) {
                     std::cout << ks[i] << ", " << ks[j] << ", " << ks[k] << ", ";
-                    double V_ijk = get_V_ijk(ks[i], ks[j], ks[k], delta_k)/(V_f*V_f);
+                    double V_ijk = get_V_ijk(ks[i], ks[j], ks[k], delta_k);
                     std::cout << V_ijk << ", ";
                     get_shell((fftw_complex *) shell_3.data(), (fftw_complex *) delta.data(), kx, ky, 
                               kz, ks[k], delta_k, N);
