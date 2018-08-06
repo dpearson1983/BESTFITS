@@ -40,7 +40,6 @@ void getDR12Gals(std::string file, std::vector<galaxy> &gals, double z_min, doub
 }
 
 void getDR12Rans(std::string file, std::vector<galaxy> &gals, double z_min, double z_max) {
-//     std::cout << "      Reading randoms from a DR12 fits file..." << std::endl;
     std::unique_ptr<CCfits::FITS> pInfile(new CCfits::FITS(file, CCfits::Read, false));
     
     CCfits::ExtHDU &table = pInfile->extension(1);
@@ -59,26 +58,19 @@ void getDR12Rans(std::string file, std::vector<galaxy> &gals, double z_min, doub
     table.column("NZ").read(nz, start, end);
     table.column("WEIGHT_FKP").read(w_fkp, start, end);
     
-//     std::cout << "      Number of randoms = " << ra.size() << std::endl;
-    
-//     std::cout << "      Adding randoms to a vector..." << std::endl;
     for (size_t i = 0; i < ra.size(); ++i) {
-//         std::cout << "\r" << i;
         if (red[i] >= z_min && red[i] < z_max) {
             galaxy gal(ra[i], dec[i], red[i], nz[i], w_fkp[i]);
             gals.push_back(gal);
         }
     }
-//     std::cout << "\n" << "      Number of randoms = " << gals.size() << std::endl;
 }
 
 vec3<double> getRMin(std::vector<galaxy> &gals, cosmology &cosmo, vec3<int> N, vec3<double> &L) {
     vec3<double> r_min = {1E17, 1E17, 1E17};
     vec3<double> r_max = {-1E17, -1E17, -1E17};
     gsl_integration_workspace *ws = gsl_integration_workspace_alloc(10000000);
-//     std::cout << "      Finding cartesian coordinates..." << std::endl;
     for (size_t i = 0; i < gals.size(); ++i) {
-//         std::cout << "\r" << i;
         vec3<double> pos = gals[i].get_unshifted_cart(cosmo, ws);
         if (pos.x < r_min.x) r_min.x = pos.x;
         if (pos.y < r_min.y) r_min.y = pos.y;
@@ -147,8 +139,6 @@ void readDR12(std::string file, std::vector<double> &delta, vec3<int> N, vec3<do
     std::vector<galaxy> gals;
     getDR12Gals(file, gals, z_min, z_max);
     
-//     vec3<double> r_min = getRMin(gals, cosmo, L);
-    
     gsl_integration_workspace *ws = gsl_integration_workspace_alloc(10000000);
     for (size_t i = 0; i < gals.size(); ++i) {
         gals[i].bin(delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, ws);
@@ -164,14 +154,11 @@ void readDR12Ran(std::string file, std::vector<double> &delta, vec3<int> N, vec3
     
     r_min = getRMin(rans, cosmo, N, L);
     
-//     std::cout << "      Binning the randoms..." << std::endl;
     gsl_integration_workspace *ws = gsl_integration_workspace_alloc(10000000);
     for (size_t i = 0; i < rans.size(); ++i) {
-//         std::cout << "\r" << i;
         rans[i].bin(delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, ws);
     }
     gsl_integration_workspace_free(ws);
-    std::cout << std::endl;
 }
 
 void readPatchy(std::string file, std::vector<double> &delta, vec3<int> N, vec3<double> L, 
