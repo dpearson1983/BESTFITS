@@ -16,8 +16,8 @@
 #endif
 
 double get_V_ijk(double k_i, double k_j, double k_k, double delta_k) {
-    return (k_i*k_j*k_k*delta_k*delta_k*delta_k)/(8.0*PI*PI*PI*PI);
-//     return 8.0*PI*PI*(k_i*k_j*k_k*delta_k*delta_k*delta_k);
+//     return (k_i*k_j*k_k*delta_k*delta_k*delta_k)/(8.0*PI*PI*PI*PI);
+    return 8.0*PI*PI*(k_i*k_j*k_k*delta_k*delta_k*delta_k);
 }
 
 double get_V_f(vec3<double> L) {
@@ -144,12 +144,12 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
                     num_ffts++;
                     kt.z = ks[k];
                     
-                    double B_est = shell_prod(shell_1, shell_2, shell_3, N);
+                    double B_est = shell_prod(shell_1, shell_2, shell_3, N)/N_tot;
                     std::cout << B_est << ", ";
                     B_est /= gal_bk_nbw.z;
                     std::cout << B_est << ", ";
                     double SN = ((P[i] + P[j] + P[k])*gal_bk_nbw.y + gal_bk_nbw.x - alpha*alpha*ran_bk_nbw.x)/gal_bk_nbw.z;
-                    B_est *= V_f;
+                    B_est *= V_f*V_f;
                     B_est /= V_ijk;
                     std::cout << B_est << ", ";
                     B_est -= SN;
