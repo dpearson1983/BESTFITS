@@ -152,7 +152,7 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
                     B_est *= V_f*V_f;
                     B_est /= V_ijk;
                     std::cout << B_est << ", ";
-                    B_est -= SN;
+//                     B_est -= SN;
                     std::cout << B_est << ", " << SN << std::endl;
                     B.push_back(B_est);
                     k_trip.push_back(kt);

@@ -1,5 +1,9 @@
 CXX = g++
+<<<<<<< HEAD
 CXXFLAGS = -fopenmp -march=skylake -mtune=skylake -O3
+=======
+CXXFLAGS = -fopenmp -march=bdver4 -mtune=bdver4 -O3
+>>>>>>> 9978f5a992c9499f7c0e0db8495bd177eb846b61
 LIBFFTW = -lfftw3 -lfftw3_omp
 LIBFITS = -lCCfits -lcfitsio
 LIBGSL = -lgsl -lgslcblas -lm
