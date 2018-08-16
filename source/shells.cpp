@@ -45,6 +45,20 @@ void get_shell(fftw_complex *shell, fftw_complex *dk,
     }
 }
 
+void get_shells(std::vector<std::vector<double>> &shells, std::vector<double> &dk, std::vector<double> &kx,
+                std::vector<double> &ky, std::vector<double> &kz, double k_min, double k_max, double delta_k, 
+                vec3<int> N, std::string wisdomFile) {
+    std::vector<double> shell(N.x*N.y*2*(N.z/2 + 1));
+    generate_wisdom_bipc2r(shell, N, wisdomFile, omp_get_max_threads());
+    int N_shells = (k_max - k_min)/delta_k;
+    for (int i =0; i < N_shells; ++i) {
+        double k_shell = k_min + (i + 0.5)*delta_k;
+        get_shell((fftw_complex *)shell.data(), (fftw_complex *)dk.data(), kx, ky, kz, k_shll, delta_k, N);
+        bip_c2r(shell, N, wisdomFile, omp_get_max_threads());
+        shells.push_back(shell);
+    }
+}
+
 void zero_shell(std::vector<double> &shell) {
 #pragma omp parallel for
     for (size_t i = 0; i < shell.size(); ++i)
@@ -88,6 +102,37 @@ std::vector<size_t> get_num_triangles() {
     fin.close();
     
     return num_triangles;
+}
+
+void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
+                    vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
+                    std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
+                    std::vector<std::vector<double>> &shells, double delta_k, double k_min, double k_max) {
+    vec3<double> kt;
+    int N_shells = (k_max - k_min)/delta_k;
+    double V_f = get_V_f(L);
+    
+    for (int i = 0; i < N_shells; ++i) {
+        kt.x = ks[i];
+        for (int j = i; i < N_shells; ++j) {
+            kt.y = ks[j];
+            for (int k = j; j < N_shells; ++k) {
+                kt.z = ks[k];
+                if (kt.z <= kt.x + kt.y) {
+                    double V_ijk = get_V_ijk(ks[i], ks[j], ks[k], delta_k);
+                    double B_est = shell_prod(shells[i], shells[j], shells[k], N)/(N.x*N.y*N.z);
+                    B_est /= gal_bk_nbw.z;
+                    B_est *= V_f*V_f;
+                    B_est /= V_ijk;
+                    double SN = (P[i] + P[j] + P[k])*gal_bk_nbw.y + gal_bk_nbw.x - alpha*alpha*ran_bk_nbw.x;
+                    SN /= gal_bk_nbw.z;
+                    B_est -= SN;
+                    B.push_back(B_est);
+                    k_trip.push_back(kt);
+                }
+            }
+        }
+    }
 }
 
 void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
