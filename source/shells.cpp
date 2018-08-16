@@ -73,6 +73,23 @@ double shell_prod(std::vector<double> &r_1, std::vector<double> &r_2, std::vecto
     return result[0];
 }
 
+std::vector<size_t> get_num_triangles() {
+    std::vector<size_t> num_triangles;
+    std::ifstream fin("numTriangles.dat");
+    
+    while (!fin.eof()) {
+        double k1, k2, k3, num_theo, diff;
+        size_t num_act;
+        fin >> k1 >> k2 >> k3 >> num_act >> num_theo >> diff;
+        if (!fin.eof()) {
+            num_triangles.push_back(num_act);
+        }
+    }
+    fin.close();
+    
+    return num_triangles;
+}
+
 void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
                     vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
                     std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
@@ -106,6 +123,8 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
     double avg_shell_time = 0.0;
     int num_shells = 0;
     double start_fft, start_shell;
+    std::vector<size_t> num_triangles = get_num_triangles();
+    int triangle_index = 0;
     for (int i = 0; i < ks.size(); ++i) {
         start_shell = omp_get_wtime();
         get_shell((fftw_complex *) shell_1.data(), (fftw_complex *) delta.data(), kx, ky, kz, ks[i], 
@@ -149,8 +168,10 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
                     B_est /= gal_bk_nbw.z;
                     std::cout << B_est << ", ";
                     double SN = ((P[i] + P[j] + P[k])*gal_bk_nbw.y + gal_bk_nbw.x - alpha*alpha*ran_bk_nbw.x)/gal_bk_nbw.z;
-                    B_est *= V_f*V_f;
-                    B_est /= V_ijk;
+//                     B_est *= V_f*V_f;
+//                     B_est /= V_ijk;
+                    B_est /= num_triangles[triangle_index];
+                    triangle_index++;
                     std::cout << B_est << ", ";
                     B_est -= SN;
                     std::cout << B_est << ", " << SN << std::endl;

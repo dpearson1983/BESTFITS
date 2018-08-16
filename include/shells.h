@@ -20,6 +20,8 @@ void get_shell(fftw_complex *shell, fftw_complex *dk,
 double shell_prod(std::vector<double> &r_1, std::vector<double> &r_2, std::vector<double> &r_3, 
                   vec3<int> N);
 
+void get_shells(fftw_complex *dk, std::vector<std::vector<double>> &shells, vec3<int> N, vec3<double> L);
+
 void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
                     vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
                     std::vector<double> &B, std::vector<vec3<double>> &k_trip, 

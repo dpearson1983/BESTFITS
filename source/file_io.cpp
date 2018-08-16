@@ -23,6 +23,8 @@ void getDR12Gals(std::string file, std::vector<galaxy> &gals, double z_min, doub
     std::vector<double> nz;
     std::vector<double> w_fkp;
     std::vector<double> w_sys;
+    std::vector<double> w_rf;
+    std::vector<double> w_cp;
     
     table.column("RA").read(ra, start, end);
     table.column("DEC").read(dec, start, end);
@@ -30,10 +32,12 @@ void getDR12Gals(std::string file, std::vector<galaxy> &gals, double z_min, doub
     table.column("NZ").read(nz, start, end);
     table.column("WEIGHT_FKP").read(w_fkp, start, end);
     table.column("WEIGHT_SYSTOT").read(w_sys, start, end);
+    table.column("WEIGHT_NOZ").read(w_rf, start, end);
+    table.column("WEIGHT_CP").read(w_cp, start, end);
     
     for (size_t i = 0; i < ra.size(); ++i) {
         if (red[i] >= z_min && red[i] < z_max) {
-            galaxy gal(ra[i], dec[i], red[i], nz[i], w_sys[i]*w_fkp[i]);
+            galaxy gal(ra[i], dec[i], red[i], nz[i], w_sys[i]*w_fkp[i]*(w_rf[i] + w_cp[i] - 1));
             gals.push_back(gal);
         }
     }
