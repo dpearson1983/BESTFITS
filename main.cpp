@@ -97,7 +97,6 @@ int main(int argc, char *argv[]) {
     std::vector<double> ks;
     for (int i = 0; i < num_k_bins; ++i) {
         double k = k_min + (i + 0.5)*delta_k;
-        std::cout << k << std::endl;
         ks.push_back(k);
     }
     
@@ -121,9 +120,7 @@ int main(int argc, char *argv[]) {
                        delta_k, p.gets("wisdomFile"));
     } else {
         std::vector<std::vector<double>> shells;
-        std::cout << "Getting shells..." << std::endl;
         get_shells(shells, delta, kx, ky, kz, k_min, k_max, delta_k, N, p.gets("wisdomFile"));
-        std::cout << "shells.size() = " << shells.size() << std::endl;
         get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B_0, k_trip, shells, delta_k, k_min, k_max);
     }
     std::cout << "Time to calculate bispectrum: " << omp_get_wtime() - start << " s" << std::endl;
