@@ -13,6 +13,7 @@
 #include "include/shells.h"
 #include "include/harppi.h"
 #include "include/power.h"
+#include "include/line_of_sight.h"
 
 int main(int argc, char *argv[]) {
     std::cout << "Initializing..." << std::endl;
@@ -40,7 +41,7 @@ int main(int argc, char *argv[]) {
     setFileType(p.gets("dataFileType"), dataFileType);
     setFileType(p.gets("ranFileType"), ranFileType);
     
-    std::vector<double> delta(N.x*N.y*2.0*(N.z/2 + 1));
+    std::vector<double> delta(N.x*N.y*N.z);
     double alpha;
     
     std::cout << "Reading in data and randoms files..." << std::endl;
@@ -64,15 +65,8 @@ int main(int argc, char *argv[]) {
         
         std::cout << "   Computing overdensity..." << std::endl;
         #pragma omp parallel for
-        for (size_t i = 0; i < N.x; ++i) {
-            for (size_t j = 0; j < N.y; ++j) {
-                for (size_t k = 0; k < N.z; ++k) {
-                    int index1 = k + N.z*(j + N.y*i);
-                    int index2 = k + 2*(N.z/2 + 1)*(j + N.y*i);
-                    
-                    delta[index2] = gal[index1] - alpha*ran[index1];
-                }
-            }
+        for (size_t i = 0; i < delta.size(); ++i) {
+            delta[i] = gal[i] - alpha*ran[i];
         }
     }
     std::cout << "Done!" << std::endl;
@@ -81,12 +75,16 @@ int main(int argc, char *argv[]) {
     std::vector<double> ky = fft_freq(N.y, L.y);
     std::vector<double> kz = fft_freq(N.z, L.z);
     
-    std::cout << "Fourier transforming overdensity field..." << std::endl;
-    fip_r2c(delta, N, p.gets("wisdomFile"), omp_get_max_threads());
-    std::cout << "Applying correction for CIC binning..." << std::endl;
-    CICbinningCorrection((fftw_complex *) delta.data(), N, L, kx, ky, kz);
+    std::vector<double> A_0(N.x*N.y*2*(N.z/2 + 1));
+    std::vector<double> A_2(N.x*N.y*2*(N.z/2 + 1));
     
-    double V_f = get_V_f(L);
+    std::cout << "Fourier transforming overdensity field..." << std::endl;
+    get_A0(delta, A_0, N);
+    get_A2(delta, A_2, N, L, r_min);
+    
+    std::cout << "Applying correction for CIC binning..." << std::endl;
+    CICbinningCorrection((fftw_complex *) A_0.data(), N, L, kx, ky, kz);
+    CICbinningCorrection((fftw_complex *) A_2.data(), N, L, kx, ky, kz);
     
     // Frequency range 0.04 <= k <= 0.168
     double k_min = p.getd("k_min");
@@ -104,7 +102,7 @@ int main(int argc, char *argv[]) {
     std::vector<double> P(num_k_bins);
     std::vector<int> N_k(num_k_bins);
     double PkShotNoise = gal_pk_nbw.y = alpha*alpha*ran_bk_nbw.y;
-    binFrequencies((fftw_complex *)delta.data(), P, N_k, N, kx, ky, kz, delta_k, k_min, k_max,
+    binFrequencies((fftw_complex *)A_0.data(), P, N_k, N, kx, ky, kz, delta_k, k_min, k_max,
                    PkShotNoise);
     normalizePower(P, N_k, gal_pk_nbw.z);
     writePowerSpectrumFile(p.gets("pkFile"), ks, P);
@@ -116,12 +114,12 @@ int main(int argc, char *argv[]) {
     std::vector<double> B_0;
     std::vector<vec3<double>> k_trip;
     if (p.getb("lowMemoryMode")) {        
-        get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B_0, k_trip, delta, kx, ky, kz, 
+        get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B_0, k_trip, A_0, kx, ky, kz, 
                        delta_k, p.gets("wisdomFile"));
     } else {
-        std::vector<std::vector<double>> shells;
-        get_shells(shells, delta, kx, ky, kz, k_min, k_max, delta_k, N, p.gets("wisdomFile"));
-        get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B_0, k_trip, shells, delta_k, k_min, k_max);
+        std::vector<std::vector<double>> A0_shells;
+        get_shells(A0_shells, A_0, kx, ky, kz, k_min, k_max, delta_k, N, p.gets("wisdomFile"));
+        get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B_0, k_trip, A0_shells, delta_k, k_min, k_max);
     }
     std::cout << "Time to calculate bispectrum: " << omp_get_wtime() - start << " s" << std::endl;
     writeBispectrumFile(p.gets("outFile"), k_trip, B_0);

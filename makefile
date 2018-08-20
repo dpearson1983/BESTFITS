@@ -4,7 +4,7 @@ LIBFFTW = -lfftw3 -lfftw3_omp
 LIBFITS = -lCCfits -lcfitsio
 LIBGSL = -lgsl -lgslcblas -lm
 
-build: cic cosmology file_io galaxy harppi power transformers shells lin_of_sight main.cpp
+build: cic cosmology file_io galaxy harppi power transformers shells line_of_sight main.cpp
 	$(CXX) $(LIBFFTW) $(LIBFITS) $(LIBGSL) $(CXXFLAGS) -o bestfits main.cpp obj/*.o
 	
 cic: source/cic.cpp
