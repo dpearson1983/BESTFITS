@@ -53,7 +53,6 @@ void get_shells(std::vector<std::vector<double>> &shells, std::vector<double> &d
     int N_shells = int((k_max - k_min)/delta_k);
     for (int i =0; i < N_shells; ++i) {
         double k_shell = k_min + (i + 0.5)*delta_k;
-        std::cout << k_shell << std::endl;
         get_shell((fftw_complex *)shell.data(), (fftw_complex *)dk.data(), kx, ky, kz, k_shell, delta_k,
                   N);
         bip_c2r(shell, N, wisdomFile, omp_get_max_threads());
@@ -94,16 +93,16 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
                     std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
                     std::vector<std::vector<double>> &shells, double delta_k, double k_min, double k_max) {
     vec3<double> kt;
-    int N_shells = (k_max - k_min)/delta_k;
+//     int N_shells = int((k_max - k_min)/delta_k);
     double V_f = get_V_f(L);
     double N_tot = N.x*N.y*N.z;
     double alpha3 = alpha*alpha*alpha;
     
-    for (int i = 0; i < N_shells; ++i) {
+    for (int i = 0; i < ks.size(); ++i) {
         kt.x = ks[i];
-        for (int j = i; j < N_shells; ++j) {
+        for (int j = i; j < ks.size(); ++j) {
             kt.y = ks[j];
-            for (int k = j; k < N_shells; ++k) {
+            for (int k = j; k < ks.size(); ++k) {
                 kt.z = ks[k];
                 if (ks[k] <= ks[i] + ks[j]) {
                     double V_ijk = get_V_ijk(ks[i], ks[j], ks[k], delta_k);
@@ -132,6 +131,8 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
     std::vector<double> shell_2(N.x*N.y*2*(N.z/2 + 1));
     std::vector<double> shell_3(N.x*N.y*2*(N.z/2 + 1));
     generate_wisdom_bipc2r(shell_1, N, wisdomFile, omp_get_max_threads());
+    generate_wisdom_bipc2r(shell_2, N, wisdomFile, omp_get_max_threads());
+    generate_wisdom_bipc2r(shell_3, N, wisdomFile, omp_get_max_threads());
     double N_tot = N.x*N.y*N.z;
     double V_f = get_V_f(L);
     vec3<double> kt;
