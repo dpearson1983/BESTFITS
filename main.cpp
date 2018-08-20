@@ -88,79 +88,46 @@ int main(int argc, char *argv[]) {
     
     double V_f = get_V_f(L);
     
-    if (p.getb("lowMemoryMode")) {
-        std::vector<double> shell(N.x*N.y*2*(N.z/2 + 1));
-        
-        // Frequency range 0.04 <= k <= 0.168
-        double k_min = p.getd("k_min");
-        double k_max = p.getd("k_max");
-        double delta_k = p.getd("delta_k");
-        int num_k_bins = int((k_max - k_min)/delta_k);
-        
-        std::cout << "Computing the power spectrum..." << std::endl;
-        std::vector<double> P(num_k_bins);
-        std::vector<int> N_k(num_k_bins);
-        double PkShotNoise = gal_pk_nbw.y + alpha*alpha*ran_bk_nbw.y;
-        binFrequencies((fftw_complex *)delta.data(), P, N_k, N, kx, ky, kz, delta_k, k_min, k_max,
-                       PkShotNoise);
-        normalizePower(P, N_k, gal_pk_nbw.z);
-        
-        //     normalize_delta(delta, N, gal_bk_nbw.z);
-        std::cout << gal_bk_nbw.z << std::endl;
-        
-        std::cout << "Selecting frequencies..." << std::endl;
-        std::vector<double> ks;
-        for (int i = 0; i < num_k_bins; ++i) {
-            double k = k_min + (i + 0.5)*delta_k;
-            ks.push_back(k);
-        }
-        
-        writePowerSpectrumFile(p.gets("pkFile"), ks, P);
-        
-        std::vector<double> B;
-        std::vector<vec3<double>> k_trip;
-        std::cout << "Computing the bispectrum monopole..." << std::endl;
-        double start = omp_get_wtime();
-        get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B, k_trip, delta, kx, ky, kz, 
+    // Frequency range 0.04 <= k <= 0.168
+    double k_min = p.getd("k_min");
+    double k_max = p.getd("k_max");
+    double delta_k = p.getd("delta_k");
+    int num_k_bins = int((k_max - k_min)/delta_k);
+    
+    std::vector<double> ks;
+    for (int i = 0; i < num_k_bins; ++i) {
+        double k = k_min + (i + 0.5)*delta_k;
+        std::cout << k << std::endl;
+        ks.push_back(k);
+    }
+    
+    std::cout << "Computing the power spectrum..." << std::endl;
+    std::vector<double> P(num_k_bins);
+    std::vector<int> N_k(num_k_bins);
+    double PkShotNoise = gal_pk_nbw.y = alpha*alpha*ran_bk_nbw.y;
+    binFrequencies((fftw_complex *)delta.data(), P, N_k, N, kx, ky, kz, delta_k, k_min, k_max,
+                   PkShotNoise);
+    normalizePower(P, N_k, gal_pk_nbw.z);
+    writePowerSpectrumFile(p.gets("pkFile"), ks, P);
+    
+    std::cout << gal_bk_nbw.z << std::endl;
+    
+    std::cout << "Computing the bispectrum monopole..." << std::endl;
+    double start = omp_get_wtime();
+    std::vector<double> B_0;
+    std::vector<vec3<double>> k_trip;
+    if (p.getb("lowMemoryMode")) {        
+        get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B_0, k_trip, delta, kx, ky, kz, 
                        delta_k, p.gets("wisdomFile"));
-        std::cout << "Time to calculate bispectrum: " << omp_get_wtime() - start << " s" << std::endl;
-        writeBispectrumFile(p.gets("outFile"), k_trip, B);
     } else {
         std::vector<std::vector<double>> shells;
-         
-        // Frequency range 0.04 <= k <= 0.168
-        double k_min = p.getd("k_min");
-        double k_max = p.getd("k_max");
-        double delta_k = p.getd("delta_k");
-        int num_k_bins = int((k_max - k_min)/delta_k);
-        
-        std::cout << "Computing the power spectrum..." << std::endl;
-        std::vector<double> P(num_k_bins);
-        std::vector<int> N_k(num_k_bins);
-        double PkShotNoise = gal_pk_nbw.y = alpha*alpha*ran_bk_nbw.y;
-        binFrequencies((fftw_complex *)delta.data(), P, N_k, N, kx, ky, kz, delta_k, k_min, k_max,
-                       PkShotNoise);
-        normalizePower(P, N_k, gal_pk_nbw.z);
-        
-        std::vector<double> ks;
-        for (int i = 0; i < num_k_bins; ++i) {
-            double k = k_min + (i + 0.5)*delta_k;
-            ks.push_back(k);
-        }
-        
         std::cout << "Getting shells..." << std::endl;
         get_shells(shells, delta, kx, ky, kz, k_min, k_max, delta_k, N, p.gets("wisdomFile"));
         std::cout << "shells.size() = " << shells.size() << std::endl;
-        
-        std::vector<double> B_0;
-        std::vector<double> B_2;
-        std::vector<vec3<double>> k_trip;
-        std::cout << "Computing the bispectrum monopole..." << std::endl;
-        double start = omp_get_wtime();
         get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B_0, k_trip, shells, delta_k, k_min, k_max);
-        std::cout << "Time to calculate bispectrum: " << omp_get_wtime() - start << " s" << std::endl;
-        writeBispectrumFile(p.gets("outFile"), k_trip, B_0);
     }
+    std::cout << "Time to calculate bispectrum: " << omp_get_wtime() - start << " s" << std::endl;
+    writeBispectrumFile(p.gets("outFile"), k_trip, B_0);
     
     return 0;
 }

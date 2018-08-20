@@ -27,3 +27,4 @@ string pkFile = galaxy_DR12v5_CMASS_North_P0.dat
 string outFile = galaxy_DR12v5_CMASS_North_B0.dat
 
 bool lowMemoryMode = false
+

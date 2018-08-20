@@ -50,9 +50,10 @@ void get_shells(std::vector<std::vector<double>> &shells, std::vector<double> &d
                 vec3<int> N, std::string wisdomFile) {
     std::vector<double> shell(N.x*N.y*2*(N.z/2 + 1));
     generate_wisdom_bipc2r(shell, N, wisdomFile, omp_get_max_threads());
-    int N_shells = (k_max - k_min)/delta_k;
+    int N_shells = int((k_max - k_min)/delta_k);
     for (int i =0; i < N_shells; ++i) {
         double k_shell = k_min + (i + 0.5)*delta_k;
+        std::cout << k_shell << std::endl;
         get_shell((fftw_complex *)shell.data(), (fftw_complex *)dk.data(), kx, ky, kz, k_shell, delta_k,
                   N);
         bip_c2r(shell, N, wisdomFile, omp_get_max_threads());
@@ -88,23 +89,6 @@ double shell_prod(std::vector<double> &r_1, std::vector<double> &r_2, std::vecto
     return result[0];
 }
 
-std::vector<size_t> get_num_triangles() {
-    std::vector<size_t> num_triangles;
-    std::ifstream fin("numTriangles.dat");
-    
-    while (!fin.eof()) {
-        double k1, k2, k3, num_theo, diff;
-        size_t num_act;
-        fin >> k1 >> k2 >> k3 >> num_act >> num_theo >> diff;
-        if (!fin.eof()) {
-            num_triangles.push_back(num_act);
-        }
-    }
-    fin.close();
-    
-    return num_triangles;
-}
-
 void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
                     vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
                     std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
@@ -112,6 +96,8 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
     vec3<double> kt;
     int N_shells = (k_max - k_min)/delta_k;
     double V_f = get_V_f(L);
+    double N_tot = N.x*N.y*N.z;
+    double alpha3 = alpha*alpha*alpha;
     
     for (int i = 0; i < N_shells; ++i) {
         kt.x = ks[i];
@@ -119,13 +105,14 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
             kt.y = ks[j];
             for (int k = j; k < N_shells; ++k) {
                 kt.z = ks[k];
-                if (kt.z <= kt.x + kt.y) {
+                if (ks[k] <= ks[i] + ks[j]) {
                     double V_ijk = get_V_ijk(ks[i], ks[j], ks[k], delta_k);
-                    double B_est = shell_prod(shells[i], shells[j], shells[k], N)/(N.x*N.y*N.z);
+                    
+                    double B_est = shell_prod(shells[i], shells[j], shells[k], N)/N_tot;
                     B_est /= gal_bk_nbw.z;
                     B_est *= V_f*V_f;
                     B_est /= V_ijk;
-                    double SN = (P[i] + P[j] + P[k])*gal_bk_nbw.y + gal_bk_nbw.x - alpha*alpha*ran_bk_nbw.x;
+                    double SN = (P[i] + P[j] + P[k])*gal_bk_nbw.y + gal_bk_nbw.x - alpha3*ran_bk_nbw.x;
                     SN /= gal_bk_nbw.z;
                     B_est -= SN;
                     B.push_back(B_est);
@@ -144,45 +131,35 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
     std::vector<double> shell_1(N.x*N.y*2*(N.z/2 + 1));
     std::vector<double> shell_2(N.x*N.y*2*(N.z/2 + 1));
     std::vector<double> shell_3(N.x*N.y*2*(N.z/2 + 1));
-    fftw_init_threads();
-    fftw_import_wisdom_from_filename(wisdomFile.c_str());
-    fftw_plan_with_nthreads(omp_get_max_threads());
-    fftw_plan trans_shell_1 = fftw_plan_dft_c2r_3d(N.x, N.y, N.z, (fftw_complex *)shell_1.data(),
-                                                   shell_1.data(), FFTW_MEASURE);
-    fftw_plan trans_shell_2 = fftw_plan_dft_c2r_3d(N.x, N.y, N.z, (fftw_complex *)shell_2.data(),
-                                                   shell_2.data(), FFTW_MEASURE);
-    fftw_plan trans_shell_3 = fftw_plan_dft_c2r_3d(N.x, N.y, N.z, (fftw_complex *)shell_3.data(),
-                                                   shell_3.data(), FFTW_MEASURE);
-    fftw_export_wisdom_to_filename(wisdomFile.c_str());
+    generate_wisdom_bipc2r(shell_1, N, wisdomFile, omp_get_max_threads());
     double N_tot = N.x*N.y*N.z;
     double V_f = get_V_f(L);
     vec3<double> kt;
-    zero_shell(shell_1);
-    zero_shell(shell_2);
-    zero_shell(shell_3);
+    double alpha3 = alpha*alpha*alpha;
     for (int i = 0; i < ks.size(); ++i) {
         get_shell((fftw_complex *) shell_1.data(), (fftw_complex *) delta.data(), kx, ky, kz, ks[i], 
                   delta_k, N);
-        fftw_execute(trans_shell_1);
+        bip_c2r(shell_1, N, wisdomFile, omp_get_max_threads());
         kt.x = ks[i];
         for (int j = i; j < ks.size(); ++j) {
             get_shell((fftw_complex *) shell_2.data(), (fftw_complex *) delta.data(), kx, ky, kz, ks[j], 
                       delta_k, N);
-            fftw_execute(trans_shell_2);
+            bip_c2r(shell_2, N, wisdomFile, omp_get_max_threads());
             kt.y = ks[j];
             for (int k = j; k < ks.size(); ++k) {
                 if (ks[k] <= ks[i] + ks[j]) {
                     double V_ijk = get_V_ijk(ks[i], ks[j], ks[k], delta_k);
                     get_shell((fftw_complex *) shell_3.data(), (fftw_complex *) delta.data(), kx, ky, 
                               kz, ks[k], delta_k, N);
-                    fftw_execute(trans_shell_3);
+                    bip_c2r(shell_3, N, wisdomFile, omp_get_max_threads());
                     kt.z = ks[k];
                     
                     double B_est = shell_prod(shell_1, shell_2, shell_3, N)/N_tot;
                     B_est /= gal_bk_nbw.z;
-                    double SN = ((P[i] + P[j] + P[k])*gal_bk_nbw.y + gal_bk_nbw.x - alpha*alpha*ran_bk_nbw.x)/gal_bk_nbw.z;
                     B_est *= V_f*V_f;
                     B_est /= V_ijk;
+                    double SN = (P[i] + P[j] + P[k])*gal_bk_nbw.y + gal_bk_nbw.x - alpha3*ran_bk_nbw.x;
+                    SN /= gal_bk_nbw.z;
                     B_est -= SN;
                     B.push_back(B_est);
                     k_trip.push_back(kt);
@@ -190,17 +167,5 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
             }
         }
     }
-    fftw_destroy_plan(trans_shell_1);
-    fftw_destroy_plan(trans_shell_2);
-    fftw_destroy_plan(trans_shell_3);
-    fftw_cleanup_threads();
-}
-
-void normalize_delta(std::vector<double> &delta, vec3<int> N, double gal_bk_nbw_z) {
-    double N_tot = N.x*N.y*N.z;
-    #pragma omp parallel for
-    for (size_t i = 0; i < delta.size(); ++i)
-//         delta[i] /= N_tot*pow(gal_bk_nbw_z,1.0/2.0);
-        delta[i] /= N_tot;
 }
 
