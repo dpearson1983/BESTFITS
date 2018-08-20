@@ -14,6 +14,7 @@
 #include "include/harppi.h"
 #include "include/power.h"
 #include "include/line_of_sight.h"
+#include "include/bispec.h"
 
 int main(int argc, char *argv[]) {
     std::cout << "Initializing..." << std::endl;
