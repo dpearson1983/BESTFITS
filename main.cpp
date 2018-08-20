@@ -120,8 +120,10 @@ int main(int argc, char *argv[]) {
         std::vector<double> B;
         std::vector<vec3<double>> k_trip;
         std::cout << "Computing the bispectrum monopole..." << std::endl;
+        double start = omp_get_wtime();
         get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B, k_trip, delta, kx, ky, kz, 
                        delta_k, p.gets("wisdomFile"));
+        std::cout << "Time to calculate bispectrum: " << omp_get_wtime() - start << " s" << std::endl;
         writeBispectrumFile(p.gets("outFile"), k_trip, B);
     } else {
         std::vector<std::vector<double>> shells;
@@ -153,8 +155,10 @@ int main(int argc, char *argv[]) {
         std::vector<double> B_0;
         std::vector<double> B_2;
         std::vector<vec3<double>> k_trip;
-        std::cout << "Computing the bispectrn monopole..." << std::endl;
+        std::cout << "Computing the bispectrum monopole..." << std::endl;
+        double start = omp_get_wtime();
         get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B_0, k_trip, shells, delta_k, k_min, k_max);
+        std::cout << "Time to calculate bispectrum: " << omp_get_wtime() - start << " s" << std::endl;
         writeBispectrumFile(p.gets("outFile"), k_trip, B_0);
     }
     

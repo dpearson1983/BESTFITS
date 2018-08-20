@@ -115,9 +115,9 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
     
     for (int i = 0; i < N_shells; ++i) {
         kt.x = ks[i];
-        for (int j = i; i < N_shells; ++j) {
+        for (int j = i; j < N_shells; ++j) {
             kt.y = ks[j];
-            for (int k = j; j < N_shells; ++k) {
+            for (int k = j; k < N_shells; ++k) {
                 kt.z = ks[k];
                 if (kt.z <= kt.x + kt.y) {
                     double V_ijk = get_V_ijk(ks[i], ks[j], ks[k], delta_k);
@@ -156,86 +156,44 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
     fftw_export_wisdom_to_filename(wisdomFile.c_str());
     double N_tot = N.x*N.y*N.z;
     double V_f = get_V_f(L);
-    std::cout << V_f << std::endl;
-    std::cout << gal_bk_nbw.z << ", " << alpha*ran_bk_nbw.z << std::endl;
     vec3<double> kt;
     zero_shell(shell_1);
     zero_shell(shell_2);
     zero_shell(shell_3);
-    std::ofstream fout("shotnoise.dat");
-    fout.precision(15);
-    double avg_fft_time = 0.0;
-    int num_ffts = 0;
-    double avg_shell_time = 0.0;
-    int num_shells = 0;
-    double start_fft, start_shell;
-    std::vector<size_t> num_triangles = get_num_triangles();
-    int triangle_index = 0;
     for (int i = 0; i < ks.size(); ++i) {
-        start_shell = omp_get_wtime();
         get_shell((fftw_complex *) shell_1.data(), (fftw_complex *) delta.data(), kx, ky, kz, ks[i], 
                   delta_k, N);
-        avg_shell_time += omp_get_wtime() - start_shell;
-        num_shells++;
-        start_fft = omp_get_wtime();
         fftw_execute(trans_shell_1);
-        avg_fft_time += omp_get_wtime() - start_fft;
-        num_ffts++;
         kt.x = ks[i];
         for (int j = i; j < ks.size(); ++j) {
-            start_shell = omp_get_wtime();
             get_shell((fftw_complex *) shell_2.data(), (fftw_complex *) delta.data(), kx, ky, kz, ks[j], 
                       delta_k, N);
-            avg_shell_time += omp_get_wtime() - start_shell;
-            num_shells++;
-            start_fft = omp_get_wtime();
             fftw_execute(trans_shell_2);
-            avg_fft_time += omp_get_wtime() - start_fft;
-            num_ffts++;
             kt.y = ks[j];
             for (int k = j; k < ks.size(); ++k) {
                 if (ks[k] <= ks[i] + ks[j]) {
-                    std::cout << ks[i] << ", " << ks[j] << ", " << ks[k] << ", ";
                     double V_ijk = get_V_ijk(ks[i], ks[j], ks[k], delta_k);
-                    std::cout << V_ijk << ", ";
-                    start_shell = omp_get_wtime();
                     get_shell((fftw_complex *) shell_3.data(), (fftw_complex *) delta.data(), kx, ky, 
                               kz, ks[k], delta_k, N);
-                    avg_shell_time += omp_get_wtime() - start_shell;
-                    num_shells++;
-                    start_fft = omp_get_wtime();
                     fftw_execute(trans_shell_3);
-                    avg_fft_time += omp_get_wtime() - start_fft;
-                    num_ffts++;
                     kt.z = ks[k];
                     
                     double B_est = shell_prod(shell_1, shell_2, shell_3, N)/N_tot;
-                    std::cout << B_est << ", ";
                     B_est /= gal_bk_nbw.z;
-                    std::cout << B_est << ", ";
                     double SN = ((P[i] + P[j] + P[k])*gal_bk_nbw.y + gal_bk_nbw.x - alpha*alpha*ran_bk_nbw.x)/gal_bk_nbw.z;
-//                     B_est *= V_f*V_f;
-//                     B_est /= V_ijk;
-                    B_est /= num_triangles[triangle_index];
-                    triangle_index++;
-                    std::cout << B_est << ", ";
+                    B_est *= V_f*V_f;
+                    B_est /= V_ijk;
                     B_est -= SN;
-                    std::cout << B_est << ", " << SN << std::endl;
                     B.push_back(B_est);
                     k_trip.push_back(kt);
-                    fout << ks[i] << " " << ks[j] << " " << ks[k] << " " << SN << "\n";
                 }
             }
         }
     }
-    fout.close();
     fftw_destroy_plan(trans_shell_1);
     fftw_destroy_plan(trans_shell_2);
     fftw_destroy_plan(trans_shell_3);
     fftw_cleanup_threads();
-    std::cout << "Average time of " << num_ffts << " FFTs: " << avg_fft_time/num_ffts << " s\n";
-    std::cout << "Average time of " << num_shells << " Shells: " << avg_shell_time/num_shells;
-    std::cout << std::endl;
 }
 
 void normalize_delta(std::vector<double> &delta, vec3<int> N, double gal_bk_nbw_z) {
