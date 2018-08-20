@@ -19,7 +19,7 @@ void get_shell(fftw_complex *shell, fftw_complex *dk,
 
 void get_shells(std::vector<std::vector<double>> &shells, std::vector<double> &dk, std::vector<double> &kx,
                 std::vector<double> &ky, std::vector<double> &kz, double k_min, double k_max, double delta_k, 
-                vec3<int> N, std::string wisdomFile)
+                vec3<int> N, std::string wisdomFile);
 
 double shell_prod(std::vector<double> &r_1, std::vector<double> &r_2, std::vector<double> &r_3, 
                   vec3<int> N);
@@ -29,7 +29,7 @@ void get_shells(fftw_complex *dk, std::vector<std::vector<double>> &shells, vec3
 void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
                     vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
                     std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
-                    std::vector<std::vector<double>> &shells, double delta_k, double k_min, double k_max)
+                    std::vector<std::vector<double>> &shells, double delta_k, double k_min, double k_max);
 
 void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
                     vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 

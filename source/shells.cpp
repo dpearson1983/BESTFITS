@@ -53,7 +53,8 @@ void get_shells(std::vector<std::vector<double>> &shells, std::vector<double> &d
     int N_shells = (k_max - k_min)/delta_k;
     for (int i =0; i < N_shells; ++i) {
         double k_shell = k_min + (i + 0.5)*delta_k;
-        get_shell((fftw_complex *)shell.data(), (fftw_complex *)dk.data(), kx, ky, kz, k_shll, delta_k, N);
+        get_shell((fftw_complex *)shell.data(), (fftw_complex *)dk.data(), kx, ky, kz, k_shell, delta_k,
+                  N);
         bip_c2r(shell, N, wisdomFile, omp_get_max_threads());
         shells.push_back(shell);
     }
