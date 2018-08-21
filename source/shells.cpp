@@ -24,6 +24,30 @@ double get_V_f(vec3<double> L) {
     return (8.0*PI*PI*PI)/(L.x*L.y*L.z);
 }
 
+// Return the vectors that fall within a given shell. This is needed for the quadrupole shot noise.
+std::vector<vec3<double>> get_shell_vecs(const vec3<int> N, const vec3<double> L, double k_shell, double Delta_k) {
+    std::vector<vec3<double>> shell;
+    
+    std::vector<double> kx = fft_freq(N.x, L.x);
+    std::vector<double> ky = fft_freq(N.y, L.y);
+    std::vector<double> kz = fft_freq(N.z, L.z);
+    
+    for (size_t i = 0; i < N.x; ++i) {
+        for (size_t j = 0; j < N.y; ++j) {
+            for (size_t k = 0; k < N.z; ++k) {
+                double k_mag = sqrt(kx[i]*kx[i] + ky[j]*ky[j] + kz[k]*kz[k]);
+                
+                if (k_mag >= k_shell - 0.5*Delta_k && k_mag < k_shell + 0.5*Delta_k) {
+                    vec3<double> k_vec = {kx[i], ky[j], kz[k]};
+                    shell.push_back(k_vec);
+                }
+            }
+        }
+    }
+    
+    return shell;
+}
+
 void get_shell(fftw_complex *shell, fftw_complex *dk, 
                std::vector<double> &kx, std::vector<double> &ky, std::vector<double> &kz, 
                double k_shell, double delta_k, vec3<int> N) {

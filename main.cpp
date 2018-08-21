@@ -43,6 +43,7 @@ int main(int argc, char *argv[]) {
     setFileType(p.gets("ranFileType"), ranFileType);
     
     std::vector<double> delta(N.x*N.y*N.z);
+    std::vector<double> Fw(N.x*N.y*N.z);
     double alpha;
     
     std::cout << "Reading in data and randoms files..." << std::endl;
@@ -68,6 +69,7 @@ int main(int argc, char *argv[]) {
         #pragma omp parallel for
         for (size_t i = 0; i < delta.size(); ++i) {
             delta[i] = gal[i] - alpha*ran[i];
+            Fw[i] = gal[i] + alpha*alpha*ran[i];
         }
     }
     std::cout << "Done!" << std::endl;
@@ -78,14 +80,20 @@ int main(int argc, char *argv[]) {
     
     std::vector<double> A_0(N.x*N.y*2*(N.z/2 + 1));
     std::vector<double> A_2(N.x*N.y*2*(N.z/2 + 1));
+    std::vector<double> Fw_0(N.x*N.y*2*(N.z/2 + 1));
+    std::vector<double> Fw_2(N.x*N.y*2*(N.z/2 + 1));
     
     std::cout << "Fourier transforming overdensity field..." << std::endl;
     get_A0(delta, A_0, N);
     get_A2(delta, A_2, N, L, r_min);
+    get_A0(Fw, Fw_0, N);
+    get_A2(Fw, Fw_2, N, L, r_min);
     
     std::cout << "Applying correction for CIC binning..." << std::endl;
     CICbinningCorrection((fftw_complex *) A_0.data(), N, L, kx, ky, kz);
     CICbinningCorrection((fftw_complex *) A_2.data(), N, L, kx, ky, kz);
+    CICbinningCorrection((fftw_complex *) Fw_0.data(), N, L, kx, ky, kz);
+    CICbinningCorrection((fftw_complex *) Fw_2.data(), N, L, kx, ky, kz);
     
     // Frequency range 0.04 <= k <= 0.168
     double k_min = p.getd("k_min");
@@ -124,6 +132,12 @@ int main(int argc, char *argv[]) {
     }
     std::cout << "Time to calculate bispectrum: " << omp_get_wtime() - start << " s" << std::endl;
     writeBispectrumFile(p.gets("outFile"), k_trip, B_0);
+    
+    if (p.getb("calcQuadrupole")) {
+        std::vector<double> SN_2;
+        std::vector<double> B_2;
+        
+    }
     
     return 0;
 }
