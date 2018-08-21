@@ -76,9 +76,9 @@ double get_mu(double a, double b, double c) {
 }
     
 double get_bispectrum_shot_noise(int k1, int k2, int k3, fftw_complex *A_0, fftw_complex *A_2, fftw_complex *Fw_0, 
-                                 fftw_complex *Fw_2, std::vector<std::vector<vec3<double>>> shells, vec3<int> N,
+                                 fftw_complex *Fw_2, std::vector<std::vector<vec3<double>>> &shells, vec3<int> N,
                                  vec3<double> L, vec3<double> gal_bk_nbw, vec3<double> ran_bk_nbw, int l, 
-                                 double k_min, double Delta_k) {
+                                 double k_min, double Delta_k, double alpha) {
     vec3<double> k_f = {(2.0*PI)/L.x, (2.0*PI)/L.y, (2.0*PI)/L.z};
     double SN1 = 0.0, SN2 = 0.0, SN3 = 0.0;
     double k_1 = k_min + (k1 + 0.5)*Delta_k;
@@ -145,7 +145,6 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
                     std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
                     std::vector<std::vector<double>> &shells, double delta_k, double k_min, double k_max) {
     vec3<double> kt;
-//     int N_shells = int((k_max - k_min)/delta_k);
     double V_f = get_V_f(L);
     double N_tot = N.x*N.y*N.z;
     double alpha3 = alpha*alpha*alpha;
@@ -229,6 +228,85 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
 void get_bispectrum_quad(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
                     vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
                     std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
-                    std::vector<std::vector<double>> &shells, double delta_k, double k_min, double k_max) {
+                    std::vector<std::vector<double>> &A0_shells, std::vector<std::vector<double>> &A2_shells,
+                    double delta_k, double k_min, double k_max, std::vector<double> &SN) {
+    vec3<double> kt;
+    double V_f = get_V_f(L);
+    double N_tot = N.x*N.y*N.z;
+    double alpha3 = alpha*alpha*alpha;
+    int bispecBin = 0;
     
+    for (int i = 0; i < ks.size(); ++i) {
+        kt.x = ks[i];
+        for (int j = i; j < ks.size(); ++j) {
+            kt.y = ks[j];
+            for (int k = j; k < ks.size(); ++k) {
+                kt.z = ks[k];
+                if (ks[k] <= ks[i] + ks[j]) {
+                    double V_ijk = get_V_ijk(ks[i], ks[j], ks[k], delta_k);
+                    
+                    double B_est = shell_prod(A2_shells[i], A0_shells[j], A0_shells[k], N)/N_tot;
+                    B_est /= gal_bk_nbw.z;
+                    B_est *= V_f*V_f;
+                    B_est /= V_ijk;
+                    B_est -= SN[bispecBin];
+                    B.push_back(B_est);
+                    k_trip.push_back(kt);
+                    bispecBin++;
+                }
+            }
+        }
+    }
+}
+
+// Low memory mode implementation. Here the shell Fourier transforms are performed on the fly instead of storing
+// them all in memory to reduce memory usage by N_shells/3, as we only need to have storage for the three
+// Fourier transforms currently in use by the code. The memory savings comes at the cost of speed, however, so
+// only use low memory mode when absolutely necessary.
+void get_bispectrum_quad(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
+                    vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
+                    std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
+                    std::vector<double> &A_0, std::vector<double> &A_2, std::vector<double> &kx, 
+                    std::vector<double> &ky, std::vector<double> &kz, double delta_k, std::string wisdomFile,
+                    std::vector<double> &SN) {
+    std::vector<double> shell_1(N.x*N.y*2*(N.z/2 + 1));
+    std::vector<double> shell_2(N.x*N.y*2*(N.z/2 + 1));
+    std::vector<double> shell_3(N.x*N.y*2*(N.z/2 + 1));
+    generate_wisdom_bipc2r(shell_1, N, wisdomFile, omp_get_max_threads());
+    generate_wisdom_bipc2r(shell_2, N, wisdomFile, omp_get_max_threads());
+    generate_wisdom_bipc2r(shell_3, N, wisdomFile, omp_get_max_threads());
+    double N_tot = N.x*N.y*N.z;
+    double V_f = get_V_f(L);
+    vec3<double> kt;
+    int bispecBin = 0;
+    for (int i = 0; i < ks.size(); ++i) {
+        get_shell((fftw_complex *) shell_1.data(), (fftw_complex *) A_2.data(), kx, ky, kz, ks[i], 
+                  delta_k, N);
+        bip_c2r(shell_1, N, wisdomFile, omp_get_max_threads());
+        kt.x = ks[i];
+        for (int j = i; j < ks.size(); ++j) {
+            get_shell((fftw_complex *) shell_2.data(), (fftw_complex *) A_0.data(), kx, ky, kz, ks[j], 
+                      delta_k, N);
+            bip_c2r(shell_2, N, wisdomFile, omp_get_max_threads());
+            kt.y = ks[j];
+            for (int k = j; k < ks.size(); ++k) {
+                if (ks[k] <= ks[i] + ks[j]) {
+                    double V_ijk = get_V_ijk(ks[i], ks[j], ks[k], delta_k);
+                    get_shell((fftw_complex *) shell_3.data(), (fftw_complex *) A_0.data(), kx, ky, 
+                              kz, ks[k], delta_k, N);
+                    bip_c2r(shell_3, N, wisdomFile, omp_get_max_threads());
+                    kt.z = ks[k];
+                    
+                    double B_est = shell_prod(shell_1, shell_2, shell_3, N)/N_tot;
+                    B_est /= gal_bk_nbw.z;
+                    B_est *= V_f*V_f;
+                    B_est /= V_ijk;
+                    B_est -= SN[bispecBin];
+                    B.push_back(B_est);
+                    k_trip.push_back(kt);
+                    bispecBin++;
+                }
+            }
+        }
+    }
 }

@@ -10,6 +10,8 @@ double get_V_ijk(double k_i, double k_j, double k_k, double delta_k);
 
 double get_V_f(vec3<double> L);
 
+std::vector<vec3<double>> get_shell_vecs(const vec3<int> N, const vec3<double> L, double k_shell, double Delta_k);
+
 void get_shell(fftw_complex *shell, fftw_complex *dk, 
                std::vector<double> &kx, std::vector<double> &ky, std::vector<double> &kz, 
                double k_shell, double delta_k, vec3<int> N);

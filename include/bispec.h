@@ -6,7 +6,7 @@
 #include "tpods.h"
 
 double get_bispectrum_shot_noise(int k1, int k2, int k3, fftw_complex *A_0, fftw_complex *A_2, fftw_complex *Fw_0, 
-                                 fftw_complex *Fw_2, std::vector<std::vector<vec3<double>>> shells, vec3<int> N,
+                                 fftw_complex *Fw_2, std::vector<std::vector<vec3<double>>> &shells, vec3<int> N,
                                  vec3<double> L, vec3<double> gal_bk_nbw, vec3<double> ran_bk_nbw, int l, 
                                  double k_min, double Delta_k);
 
@@ -20,5 +20,18 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
                     std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
                     std::vector<double> &delta, std::vector<double> &kx, std::vector<double> &ky, 
                     std::vector<double> &kz, double delta_k, std::string wisdomFile);
+
+void get_bispectrum_quad(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
+                    vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
+                    std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
+                    std::vector<std::vector<double>> &A0_shells, std::vector<std::vector<double>> &A2_shells,
+                    double delta_k, double k_min, double k_max, std::vector<double> &SN);
+
+void get_bispectrum_quad(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
+                    vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
+                    std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
+                    std::vector<double> &A_0, std::vector<double> &A_2, std::vector<double> &kx, 
+                    std::vector<double> &ky, std::vector<double> &kz, double delta_k, std::string wisdomFile,
+                    std::vector<double> &SN);
 
 #endif
