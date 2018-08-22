@@ -129,32 +129,58 @@ int main(int argc, char *argv[]) {
         get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B, k_trip, A_0, kx, ky, kz, 
                        delta_k, p.gets("wisdomFile"));
     } else {
+        std::vector<double> SN;
+        for (int i = 0; i < ks.size(); ++i) {
+            for (int j = i; j < ks.size(); ++j) {
+                for (int k = j; k < ks.size(); ++k) {
+                    if (ks[k] <= ks[i] + ks[j]) {
+                        double shotNoise = get_bispectrum_shot_noise(i, j, k, (fftw_complex *)A_0.data(), 
+                                                                     (fftw_complex *)A_2.data(), 
+                                                                     (fftw_complex *)Fw_0.data(),
+                                                                     (fftw_complex *)Fw_2.data(), shells, N, L, 
+                                                                     gal_bk_nbw, ran_bk_nbw, 0, k_min, delta_k,
+                                                                     alpha);
+                        SN.push_back(shotNoise);
+                    }
+                }
+            }
+        }
         std::vector<std::vector<double>> A0_shells;
         get_shells(A0_shells, A_0, kx, ky, kz, k_min, k_max, delta_k, N, p.gets("wisdomFile"));
-        get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B, k_trip, A0_shells, delta_k, k_min, k_max);
+        get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B, k_trip, A0_shells, delta_k, k_min, k_max, SN);
     }
     std::cout << "Time to calculate bispectrum monopole: " << omp_get_wtime() - start << " s" << std::endl;
     
-    start = omp_get_wtime();
     if (p.getb("calcQuadrupole")) {
+        std::cout << "Computing the bispectrum quadrupole..." << std::endl;
+        start = omp_get_wtime();
         std::vector<double> SN_2(691);
         
-//         double SN_time = omp_get_wtime();
-//         std::cout << "Calculatiing quadrupole shot noise..." << std::endl;
-//         for (int i = 0; i < ks.size(); ++i) {
-//             for (int j = i; j < ks.size(); ++j) {
-//                 for (int k = j; k < ks.size(); ++k) {
-//                     double shotNoise = get_bispectrum_shot_noise(i, j, k, (fftw_complex *)A_0.data(), 
-//                                                                  (fftw_complex *)A_2.data(), 
-//                                                                  (fftw_complex *)Fw_0.data(),
-//                                                                  (fftw_complex *)Fw_2.data(), shells, N, L, 
-//                                                                  gal_bk_nbw, ran_bk_nbw, 2, k_min, delta_k,
-//                                                                  alpha);
-//                     SN_2.push_back(shotNoise);
-//                 }
-//             }
-//         }
-//         std::cout << "Time to calculate quadrupole shot noise: " << omp_get_wtime() - SN_time << " s" << std::endl;
+        double SN_time = omp_get_wtime();
+        int bispecBin = 0;
+        std::cout << "Calculating quadrupole shot noise..." << std::endl;
+        std::ofstream fout("QuadShot.dat");
+        fout.precision(15);
+        for (int i = 0; i < ks.size(); ++i) {
+            for (int j = i; j < ks.size(); ++j) {
+                for (int k = j; k < ks.size(); ++k) {
+                    if (ks[k] <= ks[i] + ks[j]) {
+                        double shotNoise = get_bispectrum_shot_noise(i, j, k, (fftw_complex *)A_0.data(), 
+                                                                     (fftw_complex *)A_2.data(), 
+                                                                     (fftw_complex *)Fw_0.data(),
+                                                                     (fftw_complex *)Fw_2.data(), shells, N, L, 
+                                                                     gal_bk_nbw, ran_bk_nbw, 2, k_min, delta_k,
+                                                                     alpha);
+                        SN_2.push_back(shotNoise);
+                        fout << k_trip[bispecBin].x << " " << k_trip[bispecBin].y << " " << k_trip[bispecBin].z;
+                        fout << " " << shotNoise << "\n";
+                        bispecBin++;
+                    }
+                }
+            }
+        }
+        fout.close();
+        std::cout << "Time to calculate quadrupole shot noise: " << omp_get_wtime() - SN_time << " s" << std::endl;
         
         if (p.getb("lowMemoryMode")) {
             get_bispectrum_quad(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B, k_trip, A_0, A_2, kx, ky, kz,
@@ -167,9 +193,8 @@ int main(int argc, char *argv[]) {
             get_bispectrum_quad(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B, k_trip, A0_shells, A2_shells,
                                 delta_k, k_min, k_max, SN_2);
         }
-            
+        std::cout << "Time to calculate bispectrum quadrupole: " << omp_get_wtime() - start << " s" << std::endl;
     }
-    std::cout << "Time to calculate bispectrum quadrupole: " << omp_get_wtime() - start << " s" << std::endl;
     writeBispectrumFile(p.gets("outFile"), k_trip, B);
     
     return 0;

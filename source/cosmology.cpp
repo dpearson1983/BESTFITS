@@ -1,6 +1,8 @@
 #include "../include/cosmology.h"
+#include <vector>
 #include <cmath>
 #include <gsl/gsl_integration.h>
+#include <gsl/gsl_spline.h>
 
 #define c 299792.458
 #define G 6.6740831E-11
@@ -44,6 +46,23 @@ cosmology::cosmology(double H_0, double OmegaM, double OmegaL, double Omegab, do
     cosmology::tau = Tau;
     cosmology::T_CMB = TCMB;
     cosmology::h = H_0/100.0;
+    cosmology::acc = gsl_interp_accel_alloc();
+    cosmology::r2z = gsl_spline_alloc(gsl_interp_cspline, 1001);
+    std::vector<double> z;
+    std::vector<double> r;
+    double dz = 10.0/1000.0;
+    gsl_integration_workspace *w = gsl_integration_workspace_alloc(1000000);
+    for (int i = 0; i <= 1000; ++i) {
+        z.push_back(i*dz);
+        r.push_back(cosmology::comoving_distance(i*dz, w));
+    }
+    gsl_spline_init(cosmology::r2z, r.data(), z.data(), z.size());
+    gsl_integration_workspace_free(w);
+}
+
+cosmology::~cosmology() {
+    gsl_spline_free(cosmology::r2z);
+    gsl_interp_accel_free(cosmology::acc);
 }
 
 double cosmology::Omega_M() {
@@ -148,4 +167,8 @@ double cosmology::comoving_distance(double z, gsl_integration_workspace *w) {
     F.params = &p;
     gsl_integration_qags(&F, 0.0, z, 1E-6, 1E-6, 1000000, w, &D, &error);
     return D;
+}
+
+double cosmology::get_redshift_from_comoving_distance(double r) {
+    return gsl_spline_eval(cosmology::r2z, r, cosmology::acc);
 }

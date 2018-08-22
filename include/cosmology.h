@@ -2,9 +2,12 @@
 #define _COSMOLOGY_H_
 
 #include <gsl/gsl_integration.h>
+#include <gsl/gsl_spline.h>
 
 class cosmology{
     double Om_M, Om_L, Om_b, Om_c, tau, T_CMB, h;
+    gsl_interp_accel *acc;
+    gsl_spline *r2z;
     
     double E(double z);
     
@@ -21,6 +24,8 @@ class cosmology{
     public:
         cosmology(double H_0 = 70.0, double OmegaM = 0.3, double OmegaL = 0.7, double Omegab = 0.04, 
                   double Omegac = 0.26, double Tau = 0.066, double TCMB = 2.718);
+        
+        ~cosmology();
         
         double Omega_M();
         
@@ -49,6 +54,8 @@ class cosmology{
         double r_d();
         
         double comoving_distance(double z, gsl_integration_workspace *w);
+        
+        double get_redshift_from_comoving_distance(double r);
 
 };
 

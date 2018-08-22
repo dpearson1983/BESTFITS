@@ -74,6 +74,10 @@ double real_part(vec4<size_t> i, vec4<size_t> j, vec3<int> N, fftw_complex *A, f
 double get_mu(double a, double b, double c) {
     return (a*a + b*b - c*c)/(2.0*a*b);
 }
+
+double L_2(double mu) {
+    return (3.0*mu*mu - 1.0)/2.0;
+}
     
 double get_bispectrum_shot_noise(int k1, int k2, int k3, fftw_complex *A_0, fftw_complex *A_2, fftw_complex *Fw_0, 
                                  fftw_complex *Fw_2, std::vector<std::vector<vec3<double>>> &shells, vec3<int> N,
@@ -111,7 +115,7 @@ double get_bispectrum_shot_noise(int k1, int k2, int k3, fftw_complex *A_0, fftw
             N_2++;
         }
     }
-    SN2 *= (2*l + 1)*get_mu(k_1, k_2, k_3)/N_2;
+    SN2 *= (2*l + 1)*L_2(get_mu(k_1, k_2, k_3))/N_2;
     
     for (size_t i = 0; i < shells[k3].size(); ++i) {
         vec3<double> k3_minus = {-shells[k3][i].x, -shells[k3][i].y, -shells[k3][i].z};
@@ -125,7 +129,7 @@ double get_bispectrum_shot_noise(int k1, int k2, int k3, fftw_complex *A_0, fftw
             N_3++;
         }
     }
-    SN3 *= (2*l + 1)*get_mu(k_1, k_3, k_2)/N_3;
+    SN3 *= (2*l + 1)*L_2(get_mu(k_1, k_3, k_2))/N_3;
     
     double shotNoise = 0.0;
     if (l == 0) {
@@ -167,6 +171,38 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
                     B_est -= SN;
                     B.push_back(B_est);
                     k_trip.push_back(kt);
+                }
+            }
+        }
+    }
+}
+
+void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
+                    vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
+                    std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
+                    std::vector<std::vector<double>> &shells, double delta_k, double k_min, double k_max, std::vector<double> &SN) {
+    vec3<double> kt;
+    double V_f = get_V_f(L);
+    double N_tot = N.x*N.y*N.z;
+    double alpha3 = alpha*alpha*alpha;
+    int bispecBin = 0;
+    for (int i = 0; i < ks.size(); ++i) {
+        kt.x = ks[i];
+        for (int j = i; j < ks.size(); ++j) {
+            kt.y = ks[j];
+            for (int k = j; k < ks.size(); ++k) {
+                kt.z = ks[k];
+                if (ks[k] <= ks[i] + ks[j]) {
+                    double V_ijk = get_V_ijk(ks[i], ks[j], ks[k], delta_k);
+                    
+                    double B_est = shell_prod(shells[i], shells[j], shells[k], N)/N_tot;
+                    B_est /= gal_bk_nbw.z;
+                    B_est *= V_f*V_f;
+                    B_est /= V_ijk;
+                    B_est -= SN[bispecBin];
+                    B.push_back(B_est);
+                    k_trip.push_back(kt);
+                    bispecBin++;
                 }
             }
         }
