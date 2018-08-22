@@ -129,25 +129,9 @@ int main(int argc, char *argv[]) {
         get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B, k_trip, A_0, kx, ky, kz, 
                        delta_k, p.gets("wisdomFile"));
     } else {
-        std::vector<double> SN;
-        for (int i = 0; i < ks.size(); ++i) {
-            for (int j = i; j < ks.size(); ++j) {
-                for (int k = j; k < ks.size(); ++k) {
-                    if (ks[k] <= ks[i] + ks[j]) {
-                        double shotNoise = get_bispectrum_shot_noise(i, j, k, (fftw_complex *)A_0.data(), 
-                                                                     (fftw_complex *)A_2.data(), 
-                                                                     (fftw_complex *)Fw_0.data(),
-                                                                     (fftw_complex *)Fw_2.data(), shells, N, L, 
-                                                                     gal_bk_nbw, ran_bk_nbw, 0, k_min, delta_k,
-                                                                     alpha);
-                        SN.push_back(shotNoise);
-                    }
-                }
-            }
-        }
         std::vector<std::vector<double>> A0_shells;
         get_shells(A0_shells, A_0, kx, ky, kz, k_min, k_max, delta_k, N, p.gets("wisdomFile"));
-        get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B, k_trip, A0_shells, delta_k, k_min, k_max, SN);
+        get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B, k_trip, A0_shells, delta_k, k_min, k_max);
     }
     std::cout << "Time to calculate bispectrum monopole: " << omp_get_wtime() - start << " s" << std::endl;
     
