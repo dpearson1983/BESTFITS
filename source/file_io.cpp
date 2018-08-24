@@ -216,6 +216,18 @@ void readPatchyRan(std::string file, std::vector<double> &delta, vec3<int> N, ve
     gsl_integration_workspace_free(ws);
 }
 
+void readDensityField(std::string file, std::vector<double> &delta, vec3<int> N, vec3<double> &L, 
+                      vec3<double> &r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw,
+                      double z_min, double z_max) {
+    std::ifstream fin(file, std::ios::in|std::ios::binary);
+    fin.read((char *) &L, 3*sizeof(double));
+    fin.read((char *) &r_min, 3*sizeof(double));
+    fin.read((char *) &pk_nbw, 3*sizeof(double));
+    fin.read((char *) &bk_nbw, 3*sizeof(double));
+    fin.read((char *) delta.data(), N.x*N.y*N.z*sizeof(double));
+    fin.close();
+}
+
 void setFileType(std::string typeString, FileType &type) {
     if (typeString == "DR12") {
         type = dr12;
@@ -225,6 +237,8 @@ void setFileType(std::string typeString, FileType &type) {
         type = dr12_ran;
     } else if (typeString == "patchy_ran") {
         type = patchy_ran;
+    } else if (typeString == "density_field") {
+        type = density_field;
     } else {
         std::stringstream err_msg;
         err_msg << "Unrecognized or unsupported file type.\n";
@@ -247,6 +261,8 @@ void readFile(std::string file, std::vector<double> &delta, vec3<int> N, vec3<do
             break;
         case patchy_ran:
             readPatchyRan(file, delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
+        case density_field:
+            readDensityField(file, delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
         default:
             std::stringstream err_msg;
             err_msg << "Unrecognized or unsupported file type.\n";

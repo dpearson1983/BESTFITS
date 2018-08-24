@@ -12,7 +12,8 @@ enum FileType{
     dr12,
     patchy,
     dr12_ran,
-    patchy_ran
+    patchy_ran,
+    density_field
 };
 
 void setFileType(std::string typeString, FileType &type);
