@@ -115,7 +115,9 @@ int main(int argc, char *argv[]) {
     std::cout << "Computing the power spectrum..." << std::endl;
     std::vector<double> P(num_k_bins);
     std::vector<int> N_k(num_k_bins);
-    double PkShotNoise = gal_pk_nbw.y = alpha*alpha*ran_bk_nbw.y;
+    std::cout << alpha << std::endl;
+    double PkShotNoise = gal_pk_nbw.y + alpha*alpha*ran_pk_nbw.y;
+    std::cout << PkShotNoise << std::endl;
     binFrequencies((fftw_complex *)A_0.data(), P, N_k, N, kx, ky, kz, delta_k, k_min, k_max,
                    PkShotNoise);
     normalizePower(P, N_k, gal_pk_nbw.z);

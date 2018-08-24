@@ -232,6 +232,7 @@ void readDensityField(std::string file, std::vector<double> &delta, vec3<int> N,
 }
 
 void setFileType(std::string typeString, FileType &type) {
+    std::cout << "Setting file type " << typeString << std::endl;
     if (typeString == "DR12") {
         type = dr12;
     } else if (typeString == "patchy") {
@@ -254,18 +255,24 @@ void readFile(std::string file, std::vector<double> &delta, vec3<int> N, vec3<do
               double z_min, double z_max, FileType type) {
     switch(type) {
         case dr12:
+            std::cout << "Reading file type: DR12" << std::endl;
             readDR12(file, delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
             break;
         case patchy:
+            std::cout << "Reading file type: patchy" << std::endl;
             readPatchy(file, delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
             break;
         case dr12_ran:
+            std::cout << "Reading file type: DR12_ran" << std::endl;
             readDR12Ran(file, delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
             break;
         case patchy_ran:
+            std::cout << "Reading file type: patchy_ran" << std::endl;
             readPatchyRan(file, delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
         case density_field:
+            std::cout << "Reading file type: density_field" << std::endl;
             readDensityField(file, delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
+            break;
         default:
             std::stringstream err_msg;
             err_msg << "Unrecognized or unsupported file type.\n";
