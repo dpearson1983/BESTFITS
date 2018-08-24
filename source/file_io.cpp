@@ -219,6 +219,9 @@ void readPatchyRan(std::string file, std::vector<double> &delta, vec3<int> N, ve
 void readDensityField(std::string file, std::vector<double> &delta, vec3<int> N, vec3<double> &L, 
                       vec3<double> &r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw,
                       double z_min, double z_max) {
+    if (delta.size() != N.x*N.y*N.z) {
+        delta.resize(N.x*N.y*N.z);
+    }
     std::ifstream fin(file, std::ios::in|std::ios::binary);
     fin.read((char *) &L, 3*sizeof(double));
     fin.read((char *) &r_min, 3*sizeof(double));

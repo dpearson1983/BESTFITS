@@ -89,11 +89,13 @@ int main(int argc, char *argv[]) {
     get_A0(Fw, Fw_0, N);
     get_A2(Fw, Fw_2, N, L, r_min);
     
-    std::cout << "Applying correction for CIC binning..." << std::endl;
-    CICbinningCorrection((fftw_complex *) A_0.data(), N, L, kx, ky, kz);
-    CICbinningCorrection((fftw_complex *) A_2.data(), N, L, kx, ky, kz);
-    CICbinningCorrection((fftw_complex *) Fw_0.data(), N, L, kx, ky, kz);
-    CICbinningCorrection((fftw_complex *) Fw_2.data(), N, L, kx, ky, kz);
+    if (dataFileType != density_field) {
+        std::cout << "Applying correction for CIC binning..." << std::endl;
+        CICbinningCorrection((fftw_complex *) A_0.data(), N, L, kx, ky, kz);
+        CICbinningCorrection((fftw_complex *) A_2.data(), N, L, kx, ky, kz);
+        CICbinningCorrection((fftw_complex *) Fw_0.data(), N, L, kx, ky, kz);
+        CICbinningCorrection((fftw_complex *) Fw_2.data(), N, L, kx, ky, kz);
+    }
     
     // Frequency range 0.04 <= k <= 0.168
     double k_min = p.getd("k_min");
