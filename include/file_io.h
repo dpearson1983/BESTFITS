@@ -16,6 +16,8 @@ enum FileType{
     density_field
 };
 
+bool FileExists(const std::string& name);
+
 void setFileType(std::string typeString, FileType &type);
 
 void readFile(std::string file, std::vector<double> &delta, vec3<int> N, vec3<double> &L, 
@@ -29,5 +31,9 @@ void writeShellFile(std::string file, std::vector<double> &shell, vec3<int> N);
 void writePowerSpectrumFile(std::string file, std::vector<double> &ks, std::vector<double> &P);
 
 std::string filename(std::string base, int digits, int num, std::string ext);
+
+std::string triangleFilename(vec3<double> L, double k_min, double k_max);
+
+void writeTriangleFile(std::vector<size_t> &N_tri, vec3<double> L, double k_min, double k_max);
 
 #endif

@@ -28,4 +28,5 @@ string outFile = galaxy_DR12v5_CMASS_North_B0.dat
 
 bool lowMemoryMode = false
 bool calcQuadrupole = true
+bool exactTriangles = true
 

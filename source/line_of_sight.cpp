@@ -11,7 +11,7 @@ void get_A0(std::vector<double> &dr, std::vector<double> &A_0, vec3<int> N) {
     if (A_0.size() != N.x*N.y*2*(N.z/2 + 1)) {
         A_0.resize(N.x*N.y*2*(N.z/2 + 1));
     }
-    generate_wisdom_fipr2c(A_0, N, wisdom_file, omp_get_max_threads()); // TODO: Add this function to transformers
+    generate_wisdom_fipr2c(A_0, N, wisdom_file, omp_get_max_threads());
     
     #pragma omp parallel for
     for (int i = 0; i < N.x; ++i) {

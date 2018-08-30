@@ -14,7 +14,7 @@ void binFrequencies(fftw_complex *delta, std::vector<double> &P, std::vector<int
                 double k_mag = sqrt(kx[i]*kx[i] + ky[j]*ky[j] + kz[k]*kz[k]);
                 
                 if (k_mag >= k_min && k_mag < k_max) {
-                    int index = k + (N.z/2 + 1)*(j + N.y*i);
+                    size_t index = k + (N.z/2 + 1)*(j + N.y*i);
                     int bin = int((k_mag - k_min)/delta_k);
                     P[bin] += delta[index][0]*delta[index][0] + delta[index][1]*delta[index][1] - SN;
                     N_k[bin]++;

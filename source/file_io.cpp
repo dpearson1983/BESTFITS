@@ -3,12 +3,18 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <sys/stat.h>
 #include <CCfits/CCfits>
 #include <gsl/gsl_integration.h>
 #include "../include/file_io.h"
 #include "../include/tpods.h"
 #include "../include/galaxy.h"
 #include "../include/cosmology.h"
+
+bool FileExists(const std::string& name) {
+  struct stat buffer;
+  return (stat (name.c_str(), &buffer) == 0);
+}
 
 void getDR12Gals(std::string file, std::vector<galaxy> &gals, double z_min, double z_max) {
     std::unique_ptr<CCfits::FITS> pInfile(new CCfits::FITS(file, CCfits::Read, false));
@@ -319,3 +325,18 @@ std::string filename(std::string base, int digits, int num, std::string ext) {
     file << base << std::setw(digits) << std::setfill('0') << num << "." << ext;
     return file.str();
 }
+
+std::string triangleFilename(vec3<double> L, double k_min, double k_max) {
+    std::stringstream file;
+    file << "numTri-" << L.x << "x" << L.y << "x" << L.z << "-" << k_min << "-" << k_max << ".dat";
+    return file.str();
+}
+
+void writeTriangleFile(std::vector<size_t> &N_tri, vec3<double> L, double k_min, double k_max) {
+    std::string file = triangleFilename(L, k_min, k_max);
+    std::ofstream fout(file);
+    for (int i = 0; i < N_tri.size(); ++i)
+        fout << N_tri[i] << "\n";
+    fout.close();
+}
+    
