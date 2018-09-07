@@ -83,11 +83,29 @@ int main(int argc, char *argv[]) {
     std::vector<double> Fw_0(N.x*N.y*2*(N.z/2 + 1));
     std::vector<double> Fw_2(N.x*N.y*2*(N.z/2 + 1));
     
+    std::cout << "A_0[0] = " << A_0[0] << std::endl;
+    std::cout << "A_2[0] = " << A_2[0] << std::endl;
+    
+    std::cout << "Fw_0[0] = " << Fw_0[0] << std::endl;
+    std::cout << "Fw_2[0] = " << Fw_2[0] << std::endl;
+    
+    std::cout << "Fw_0[1] = " << Fw_0[1] << std::endl;
+    std::cout << "Fw_2[1] = " << Fw_2[1] << std::endl;
+    
     std::cout << "Fourier transforming overdensity field..." << std::endl;
     get_A0(delta, A_0, N);
     get_A2(delta, A_2, N, L, r_min);
     get_A0(Fw, Fw_0, N);
     get_A2(Fw, Fw_2, N, L, r_min);
+    
+    std::cout << "A_0[0] = " << A_0[0] << std::endl;
+    std::cout << "A_2[0] = " << A_2[0] << std::endl;
+    
+    std::cout << "Fw_0[0] = " << Fw_0[0] << std::endl;
+    std::cout << "Fw_2[0] = " << Fw_2[0] << std::endl;
+    
+    std::cout << "Fw_0[1] = " << Fw_0[1] << std::endl;
+    std::cout << "Fw_2[1] = " << Fw_2[1] << std::endl;
     
     if (dataFileType != density_field) {
         std::cout << "Applying correction for CIC binning..." << std::endl;
@@ -96,6 +114,15 @@ int main(int argc, char *argv[]) {
         CICbinningCorrection((fftw_complex *) Fw_0.data(), N, L, kx, ky, kz);
         CICbinningCorrection((fftw_complex *) Fw_2.data(), N, L, kx, ky, kz);
     }
+    
+    std::cout << "A_0[0] = " << A_0[0] << std::endl;
+    std::cout << "A_2[0] = " << A_2[0] << std::endl;
+    
+    std::cout << "Fw_0[0] = " << Fw_0[0] << std::endl;
+    std::cout << "Fw_2[0] = " << Fw_2[0] << std::endl;
+    
+    std::cout << "Fw_0[1] = " << Fw_0[1] << std::endl;
+    std::cout << "Fw_2[1] = " << Fw_2[1] << std::endl;
     
     // Frequency range 0.04 <= k <= 0.168
     double k_min = p.getd("k_min");

@@ -125,6 +125,7 @@ double get_bispectrum_shot_noise(int k1, int k2, int k3, fftw_complex *A_0, fftw
                                  vec3<double> L, vec3<double> gal_bk_nbw, vec3<double> ran_bk_nbw, int l, 
                                  double k_min, double Delta_k, double alpha) {
     vec3<double> k_f = {(2.0*PI)/L.x, (2.0*PI)/L.y, (2.0*PI)/L.z};
+    double V_f = 1.0;
     double SN1 = 0.0, SN2 = 0.0, SN3 = 0.0;
     double k_1 = k_min + (k1 + 0.5)*Delta_k;
     double k_2 = k_min + (k2 + 0.5)*Delta_k;
@@ -142,7 +143,7 @@ double get_bispectrum_shot_noise(int k1, int k2, int k3, fftw_complex *A_0, fftw
             N_1++;
         }
     }
-    SN1 *= (2*l + 1)/N_1;
+    SN1 *= (2*l + 1)*V_f/N_1;
     
     for (size_t i = 0; i < shells[k2].size(); ++i) {
         vec3<double> k2_minus = {-shells[k2][i].x, -shells[k2][i].y, -shells[k2][i].z};
@@ -156,7 +157,7 @@ double get_bispectrum_shot_noise(int k1, int k2, int k3, fftw_complex *A_0, fftw
             N_2++;
         }
     }
-    SN2 *= (2*l + 1)*L_2(get_mu(k_1, k_2, k_3))/N_2;
+    SN2 *= (2*l + 1)*V_f*L_2(get_mu(k_1, k_2, k_3))/N_2;
     
     for (size_t i = 0; i < shells[k3].size(); ++i) {
         vec3<double> k3_minus = {-shells[k3][i].x, -shells[k3][i].y, -shells[k3][i].z};
@@ -170,13 +171,13 @@ double get_bispectrum_shot_noise(int k1, int k2, int k3, fftw_complex *A_0, fftw
             N_3++;
         }
     }
-    SN3 *= (2*l + 1)*L_2(get_mu(k_1, k_3, k_2))/N_3;
+    SN3 *= (2*l + 1)*V_f*L_2(get_mu(k_1, k_3, k_2))/N_3;
     
     double shotNoise = 0.0;
     if (l == 0) {
-        shotNoise = SN1 + SN2 + SN3 - (2.0*(gal_bk_nbw.x - alpha*alpha*alpha*ran_bk_nbw.x))/gal_bk_nbw.z;
+        shotNoise = (SN1 + SN2 + SN3 - 2.0*(gal_bk_nbw.x - alpha*alpha*alpha*ran_bk_nbw.x))/gal_bk_nbw.z;
     } else if (l == 2) {
-        shotNoise = (SN1 + SN2 + SN3);
+        shotNoise = (SN1 + SN2 + SN3)/gal_bk_nbw.z;
     }
     
     return shotNoise;

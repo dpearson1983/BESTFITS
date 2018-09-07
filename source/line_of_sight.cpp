@@ -52,6 +52,8 @@ void sum_Bs(fftw_complex *A_2, fftw_complex *Bxx, fftw_complex *Byy, fftw_comple
     }
 }
 
+// TODO: There is a problem in this function, or possibly sum_Bs, that results in the output array, A_2, being
+// filled with 'nan', e.g. not a number.
 void get_A2(std::vector<double> &dr, std::vector<double> &A_2, vec3<int> N, vec3<double> L, vec3<double> r_min) {
     if (A_2.size() != N.x*N.y*2*(N.z/2 + 1)) {
         A_2.resize(N.x*N.y*2*(N.z/2 + 1));
@@ -63,6 +65,11 @@ void get_A2(std::vector<double> &dr, std::vector<double> &A_2, vec3<int> N, vec3
     std::vector<double> Bxz(N.x*N.y*2*(N.z/2 + 1));
     std::vector<double> Byz(N.x*N.y*2*(N.z/2 + 1));
     generate_wisdom_fipr2c(Bxx, N, wisdom_file, omp_get_max_threads());
+    generate_wisdom_fipr2c(Byy, N, wisdom_file, omp_get_max_threads());
+    generate_wisdom_fipr2c(Bzz, N, wisdom_file, omp_get_max_threads());
+    generate_wisdom_fipr2c(Bxy, N, wisdom_file, omp_get_max_threads());
+    generate_wisdom_fipr2c(Bxz, N, wisdom_file, omp_get_max_threads());
+    generate_wisdom_fipr2c(Byz, N, wisdom_file, omp_get_max_threads());
     
     vec3<double> del_r = {L.x/N.x, L.y/N.y, L.z/N.z};
     
@@ -73,16 +80,25 @@ void get_A2(std::vector<double> &dr, std::vector<double> &A_2, vec3<int> N, vec3
             double r_y = r_min.y + (j + 0.5)*del_r.y;
             for (int k = 0; k < N.z; ++k) {
                 double r_z = r_min.z + (k + 0.5)*del_r.z;
-                double r_magsq = r_x*r_x + r_y*r_y+ r_z*r_z;
+                double r_magsq = r_x*r_x + r_y*r_y + r_z*r_z;
                 int index1 = k + N.z*(j + N.y*i);
                 int index2 = k + 2*(N.z/2 + 1)*(j + N.y*i);
                 
-                Bxx[index2] = (r_x*r_x*dr[index1])/r_magsq;
-                Byy[index2] = (r_y*r_y*dr[index1])/r_magsq;
-                Bzz[index2] = (r_z*r_z*dr[index1])/r_magsq;
-                Bxy[index2] = (r_x*r_y*dr[index1])/r_magsq;
-                Bxz[index2] = (r_x*r_z*dr[index1])/r_magsq;
-                Byz[index2] = (r_y*r_z*dr[index1])/r_magsq;
+                if (r_magsq != 0) {
+                    Bxx[index2] = (r_x*r_x*dr[index1])/r_magsq;
+                    Byy[index2] = (r_y*r_y*dr[index1])/r_magsq;
+                    Bzz[index2] = (r_z*r_z*dr[index1])/r_magsq;
+                    Bxy[index2] = (r_x*r_y*dr[index1])/r_magsq;
+                    Bxz[index2] = (r_x*r_z*dr[index1])/r_magsq;
+                    Byz[index2] = (r_y*r_z*dr[index1])/r_magsq;
+                } else {
+                    Bxx[index2] = 0.0;
+                    Byy[index2] = 0.0;
+                    Bzz[index2] = 0.0;
+                    Bxy[index2] = 0.0;
+                    Bxz[index2] = 0.0;
+                    Byz[index2] = 0.0;
+                }
             }
         }
     }
