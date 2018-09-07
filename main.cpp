@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
         #pragma omp parallel for
         for (size_t i = 0; i < delta.size(); ++i) {
             delta[i] = gal[i] - alpha*ran[i];
-            Fw[i] = gal_pk_nbw.y + alpha*alpha*ran_pk_nbw.y;
+            Fw[i] = (gal_pk_nbw.y + alpha*alpha*ran_pk_nbw.y)/gal_pk_nbw.z;
         }
     }
     std::cout << "Done!" << std::endl;

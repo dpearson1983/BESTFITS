@@ -174,9 +174,9 @@ double get_bispectrum_shot_noise(int k1, int k2, int k3, fftw_complex *A_0, fftw
     
     double shotNoise = 0.0;
     if (l == 0) {
-        shotNoise = (SN1 + SN2 + SN3 - 2.0*(gal_bk_nbw.x - alpha*alpha*alpha*ran_bk_nbw.x))/gal_bk_nbw.z;
+        shotNoise = SN1 + SN2 + SN3 - (2.0*(gal_bk_nbw.x - alpha*alpha*alpha*ran_bk_nbw.x))/gal_bk_nbw.z;
     } else if (l == 2) {
-        shotNoise = SN1 + SN2 + SN3;
+        shotNoise = (SN1 + SN2 + SN3);
     }
     
     return shotNoise;
