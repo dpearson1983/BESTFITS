@@ -1,6 +1,10 @@
+#include <iostream>
+#include <sstream>
 #include <vector>
+#include <cmath>
 #include <fftw3.h>
 #include <omp.h>
+#include <fenv.h>
 #include "../include/tpods.h"
 #include "../include/transformers.h"
 #include "../include/line_of_sight.h"
@@ -33,23 +37,41 @@ void sum_Bs(fftw_complex *A_2, fftw_complex *Bxx, fftw_complex *Byy, fftw_comple
     std::vector<double> kx = fft_freq(N.x, L.x);
     std::vector<double> ky = fft_freq(N.y, L.y);
     std::vector<double> kz = fft_freq(N.z, L.z);
+    size_t kmagsq_zero = 0;
     
-    #pragma omp parallel for
+//     #pragma omp parallel for
     for (int i = 0; i < N.x; ++i) {
         for (int j = 0; j < N.y; ++j) {
             for (int k = 0; k <= N.z/2; ++k) {
                 int index = k + (N.z/2 + 1)*(j + N.y*i);
                 double k_magsq = kx[i]*kx[i] + ky[j]*ky[j] + kz[k]*kz[k];
                 
-                A_2[index][0] = (kx[i]*kx[i]*Bxx[index][0] + ky[j]*ky[j]*Byy[index][0] + 
-                                 kz[k]*kz[k]*Bzz[index][0] + 2.0*kx[i]*ky[j]*Bxy[index][0] +
-                                 2.0*kx[i]*kz[k]*Bxz[index][0] + 2.0*ky[j]*kz[k]*Byz[index][0])/k_magsq;
-                A_2[index][1] = (kx[i]*kx[i]*Bxx[index][1] + ky[j]*ky[j]*Byy[index][1] + 
-                                 kz[k]*kz[k]*Bzz[index][1] + 2.0*kx[i]*ky[j]*Bxy[index][1] +
-                                 2.0*kx[i]*kz[k]*Bxz[index][1] + 2.0*ky[j]*kz[k]*Byz[index][1])/k_magsq;
+                if (k_magsq > 0) {
+                    A_2[index][0] = (kx[i]*kx[i]*Bxx[index][0] + ky[j]*ky[j]*Byy[index][0] + 
+                    kz[k]*kz[k]*Bzz[index][0] + 2.0*kx[i]*ky[j]*Bxy[index][0] +
+                    2.0*kx[i]*kz[k]*Bxz[index][0] + 2.0*ky[j]*kz[k]*Byz[index][0])/k_magsq;
+                    A_2[index][1] = (kx[i]*kx[i]*Bxx[index][1] + ky[j]*ky[j]*Byy[index][1] + 
+                    kz[k]*kz[k]*Bzz[index][1] + 2.0*kx[i]*ky[j]*Bxy[index][1] +
+                    2.0*kx[i]*kz[k]*Bxz[index][1] + 2.0*ky[j]*kz[k]*Byz[index][1])/k_magsq;
+                } else {
+                    A_2[index][0] = 0.0;
+                    A_2[index][1] = 0.0;
+                    kmagsq_zero++;
+                }
+                                 
+//                 if (std::isnan(A_2[index][0]) || std::isnan(A_2[index][1])) {
+//                     std::stringstream errMsg;
+//                     errMsg << "NaN encountered" << "\n";
+//                     errMsg << "    (i, j, k) = (" << i << ", " << j << ", " << k << ")\n";
+//                     errMsg << "    k_x = " << kx[i] << ", k_y = " << ky[j] << ", k_z = " << kz[k] << "\n";
+//                     errMsg << "    A_2[" << index << "][0] = " << A_2[index][0] << "\n";
+//                     errMsg << "    A_2[" << index << "][1] = " << A_2[index][1] << std::endl;
+//                     throw std::runtime_error(errMsg.str());
+//                 }
             }
         }
     }
+    std::cout << "Number of times value set to zero: " << kmagsq_zero << std::endl;
 }
 
 // TODO: There is a problem in this function, or possibly sum_Bs, that results in the output array, A_2, being
@@ -91,6 +113,20 @@ void get_A2(std::vector<double> &dr, std::vector<double> &A_2, vec3<int> N, vec3
                     Bxy[index2] = (r_x*r_y*dr[index1])/r_magsq;
                     Bxz[index2] = (r_x*r_z*dr[index1])/r_magsq;
                     Byz[index2] = (r_y*r_z*dr[index1])/r_magsq;
+//                     if (std::isnan(Bxx[index2]) || std::isnan(Byy[index2]) || std::isnan(Bzz[index2]) ||
+//                         std::isnan(Bxy[index2]) || std::isnan(Bxz[index2]) || std::isnan(Byz[index2])) {
+//                             std::stringstream errMsg;
+//                             errMsg << "NaN encountered" << "\n";
+//                             errMsg << "    (i, j, k) = (" << i << ", " << j << ", " << k << ")\n";
+//                             errMsg << "    r_x = " << r_x << ", r_y = " << r_y << ", r_z = " << r_z << "\n";
+//                             errMsg << "    Bxx[" << index2 << "] = " << Bxx[index2] << "\n";
+//                             errMsg << "    Byy[" << index2 << "] = " << Byy[index2] << "\n";
+//                             errMsg << "    Bzz[" << index2 << "] = " << Bzz[index2] << "\n";
+//                             errMsg << "    Bxy[" << index2 << "] = " << Bxy[index2] << "\n";
+//                             errMsg << "    Bxz[" << index2 << "] = " << Bxz[index2] << "\n";
+//                             errMsg << "    Byz[" << index2 << "] = " << Byz[index2] << std::endl;
+//                             throw std::runtime_error(errMsg.str());
+//                     }
                 } else {
                     Bxx[index2] = 0.0;
                     Byy[index2] = 0.0;

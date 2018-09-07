@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
         #pragma omp parallel for
         for (size_t i = 0; i < delta.size(); ++i) {
             delta[i] = gal[i] - alpha*ran[i];
-            Fw[i] = (gal_pk_nbw.y + alpha*alpha*ran_pk_nbw.y)/gal_pk_nbw.z;
+            Fw[i] = (gal[i] + alpha*alpha*ran[i]);
         }
     }
     std::cout << "Done!" << std::endl;
@@ -83,29 +83,36 @@ int main(int argc, char *argv[]) {
     std::vector<double> Fw_0(N.x*N.y*2*(N.z/2 + 1));
     std::vector<double> Fw_2(N.x*N.y*2*(N.z/2 + 1));
     
-    std::cout << "A_0[0] = " << A_0[0] << std::endl;
-    std::cout << "A_2[0] = " << A_2[0] << std::endl;
-    
-    std::cout << "Fw_0[0] = " << Fw_0[0] << std::endl;
-    std::cout << "Fw_2[0] = " << Fw_2[0] << std::endl;
-    
-    std::cout << "Fw_0[1] = " << Fw_0[1] << std::endl;
-    std::cout << "Fw_2[1] = " << Fw_2[1] << std::endl;
-    
     std::cout << "Fourier transforming overdensity field..." << std::endl;
     get_A0(delta, A_0, N);
     get_A2(delta, A_2, N, L, r_min);
     get_A0(Fw, Fw_0, N);
     get_A2(Fw, Fw_2, N, L, r_min);
     
-    std::cout << "A_0[0] = " << A_0[0] << std::endl;
-    std::cout << "A_2[0] = " << A_2[0] << std::endl;
-    
-    std::cout << "Fw_0[0] = " << Fw_0[0] << std::endl;
-    std::cout << "Fw_2[0] = " << Fw_2[0] << std::endl;
-    
-    std::cout << "Fw_0[1] = " << Fw_0[1] << std::endl;
-    std::cout << "Fw_2[1] = " << Fw_2[1] << std::endl;
+    double average = 0;
+    for (size_t i = 0; i < A_2.size(); ++i) {
+        if (A_2[i] == 0) {
+            std::cout << "A_2[" << i << "] = " << A_2[i] << std::endl;
+        }
+        average += A_2[i];
+    }
+    std::cout << average/A_2.size() << std::endl;
+    average = 0;
+    for (size_t i = 0; i < Fw_0.size(); ++i) {
+        if (Fw_0[i] == 0) {
+            std::cout << "Fw_0[" << i << "] = " << Fw_0[i] << std::endl;
+        }
+        average += Fw_0[i];
+    }
+    std::cout << average/Fw_0.size() << std::endl;
+    average = 0;
+    for (size_t i = 0; i < Fw_2.size(); ++i) {
+        if (Fw_2[i] == 0) {
+            std::cout << "Fw_2[" << i << "] = " << Fw_2[i] << std::endl;
+        }
+        average += Fw_2[i];
+    }
+    std::cout << average/Fw_2.size();
     
     if (dataFileType != density_field) {
         std::cout << "Applying correction for CIC binning..." << std::endl;
@@ -114,15 +121,6 @@ int main(int argc, char *argv[]) {
         CICbinningCorrection((fftw_complex *) Fw_0.data(), N, L, kx, ky, kz);
         CICbinningCorrection((fftw_complex *) Fw_2.data(), N, L, kx, ky, kz);
     }
-    
-    std::cout << "A_0[0] = " << A_0[0] << std::endl;
-    std::cout << "A_2[0] = " << A_2[0] << std::endl;
-    
-    std::cout << "Fw_0[0] = " << Fw_0[0] << std::endl;
-    std::cout << "Fw_2[0] = " << Fw_2[0] << std::endl;
-    
-    std::cout << "Fw_0[1] = " << Fw_0[1] << std::endl;
-    std::cout << "Fw_2[1] = " << Fw_2[1] << std::endl;
     
     // Frequency range 0.04 <= k <= 0.168
     double k_min = p.getd("k_min");
@@ -180,31 +178,31 @@ int main(int argc, char *argv[]) {
         start = omp_get_wtime();
         std::vector<double> SN_2(691);
         
-        double SN_time = omp_get_wtime();
-        int bispecBin = 0;
-        std::cout << "Calculating quadrupole shot noise..." << std::endl;
-        std::ofstream fout("QuadShot.dat");
-        fout.precision(15);
-        for (int i = 0; i < ks.size(); ++i) {
-            for (int j = i; j < ks.size(); ++j) {
-                for (int k = j; k < ks.size(); ++k) {
-                    if (ks[k] <= ks[i] + ks[j]) {
-                        double shotNoise = get_bispectrum_shot_noise(i, j, k, (fftw_complex *)A_0.data(), 
-                                                                     (fftw_complex *)A_2.data(), 
-                                                                     (fftw_complex *)Fw_0.data(),
-                                                                     (fftw_complex *)Fw_2.data(), shells, N, L, 
-                                                                     gal_bk_nbw, ran_bk_nbw, 2, k_min, delta_k,
-                                                                     alpha);
-                        SN_2[bispecBin] = shotNoise;
-                        fout << k_trip[bispecBin].x << " " << k_trip[bispecBin].y << " " << k_trip[bispecBin].z;
-                        fout << " " << shotNoise << "\n";
-                        bispecBin++;
-                    }
-                }
-            }
-        }
-        fout.close();
-        std::cout << "Time to calculate quadrupole shot noise: " << omp_get_wtime() - SN_time << " s" << std::endl;
+//         double SN_time = omp_get_wtime();
+//         int bispecBin = 0;
+//         std::cout << "Calculating quadrupole shot noise..." << std::endl;
+//         std::ofstream fout("QuadShot.dat");
+//         fout.precision(15);
+//         for (int i = 0; i < ks.size(); ++i) {
+//             for (int j = i; j < ks.size(); ++j) {
+//                 for (int k = j; k < ks.size(); ++k) {
+//                     if (ks[k] <= ks[i] + ks[j]) {
+//                         double shotNoise = get_bispectrum_shot_noise(i, j, k, (fftw_complex *)A_0.data(), 
+//                                                                      (fftw_complex *)A_2.data(), 
+//                                                                      (fftw_complex *)Fw_0.data(),
+//                                                                      (fftw_complex *)Fw_2.data(), shells, N, L, 
+//                                                                      gal_bk_nbw, ran_bk_nbw, 2, k_min, delta_k,
+//                                                                      alpha);
+//                         SN_2[bispecBin] = shotNoise;
+//                         fout << k_trip[bispecBin].x << " " << k_trip[bispecBin].y << " " << k_trip[bispecBin].z;
+//                         fout << " " << shotNoise << "\n";
+//                         bispecBin++;
+//                     }
+//                 }
+//             }
+//         }
+//         fout.close();
+//         std::cout << "Time to calculate quadrupole shot noise: " << omp_get_wtime() - SN_time << " s" << std::endl;
         
         if (p.getb("lowMemoryMode")) {
             get_bispectrum_quad(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B, k_trip, A_0, A_2, kx, ky, kz, k_min, 
