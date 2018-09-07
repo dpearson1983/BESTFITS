@@ -129,7 +129,7 @@ double get_bispectrum_shot_noise(int k1, int k2, int k3, fftw_complex *A_0, fftw
     double k_1 = k_min + (k1 + 0.5)*Delta_k;
     double k_2 = k_min + (k2 + 0.5)*Delta_k;
     double k_3 = k_min + (k3 + 0.5)*Delta_k;
-    int N_1 = 0, N_2 = 0, N_3 = 0;
+    double N_1 = 0, N_2 = 0, N_3 = 0;
     for (size_t i = 0; i < shells[k1].size(); ++i) {
         vec3<double> k1_minus = {-shells[k1][i].x, -shells[k1][i].y, -shells[k1][i].z};
         vec4<size_t> index_plus = get_index(shells[k1][i], k_f, N);

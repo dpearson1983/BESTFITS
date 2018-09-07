@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
         #pragma omp parallel for
         for (size_t i = 0; i < delta.size(); ++i) {
             delta[i] = gal[i] - alpha*ran[i];
-            Fw[i] = gal[i] + alpha*alpha*ran[i];
+            Fw[i] = gal_pk_nbw.y + alpha*alpha*ran_pk_nbw.y;
         }
     }
     std::cout << "Done!" << std::endl;
@@ -155,28 +155,28 @@ int main(int argc, char *argv[]) {
         
         double SN_time = omp_get_wtime();
         int bispecBin = 0;
-//         std::cout << "Calculating quadrupole shot noise..." << std::endl;
-//         std::ofstream fout("QuadShot.dat");
-//         fout.precision(15);
-//         for (int i = 0; i < ks.size(); ++i) {
-//             for (int j = i; j < ks.size(); ++j) {
-//                 for (int k = j; k < ks.size(); ++k) {
-//                     if (ks[k] <= ks[i] + ks[j]) {
-//                         double shotNoise = get_bispectrum_shot_noise(i, j, k, (fftw_complex *)A_0.data(), 
-//                                                                      (fftw_complex *)A_2.data(), 
-//                                                                      (fftw_complex *)Fw_0.data(),
-//                                                                      (fftw_complex *)Fw_2.data(), shells, N, L, 
-//                                                                      gal_bk_nbw, ran_bk_nbw, 2, k_min, delta_k,
-//                                                                      alpha);
-//                         SN_2[bispecBin] = shotNoise;
-//                         fout << k_trip[bispecBin].x << " " << k_trip[bispecBin].y << " " << k_trip[bispecBin].z;
-//                         fout << " " << shotNoise << "\n";
-//                         bispecBin++;
-//                     }
-//                 }
-//             }
-//         }
-//         fout.close();
+        std::cout << "Calculating quadrupole shot noise..." << std::endl;
+        std::ofstream fout("QuadShot.dat");
+        fout.precision(15);
+        for (int i = 0; i < ks.size(); ++i) {
+            for (int j = i; j < ks.size(); ++j) {
+                for (int k = j; k < ks.size(); ++k) {
+                    if (ks[k] <= ks[i] + ks[j]) {
+                        double shotNoise = get_bispectrum_shot_noise(i, j, k, (fftw_complex *)A_0.data(), 
+                                                                     (fftw_complex *)A_2.data(), 
+                                                                     (fftw_complex *)Fw_0.data(),
+                                                                     (fftw_complex *)Fw_2.data(), shells, N, L, 
+                                                                     gal_bk_nbw, ran_bk_nbw, 2, k_min, delta_k,
+                                                                     alpha);
+                        SN_2[bispecBin] = shotNoise;
+                        fout << k_trip[bispecBin].x << " " << k_trip[bispecBin].y << " " << k_trip[bispecBin].z;
+                        fout << " " << shotNoise << "\n";
+                        bispecBin++;
+                    }
+                }
+            }
+        }
+        fout.close();
         std::cout << "Time to calculate quadrupole shot noise: " << omp_get_wtime() - SN_time << " s" << std::endl;
         
         if (p.getb("lowMemoryMode")) {
