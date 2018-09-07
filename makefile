@@ -1,11 +1,14 @@
 CXX = g++
-CXXFLAGS = -fopenmp -march=skylake -mtune=skylake -O3
+CXXFLAGS = -fopenmp -march=bdver4 -mtune=bdver4 -O3
 LIBFFTW = -lfftw3 -lfftw3_omp
 LIBFITS = -lCCfits -lcfitsio
 LIBGSL = -lgsl -lgslcblas -lm
 
 build: cic cosmology file_io galaxy harppi power transformers shells line_of_sight bispec main.cpp
 	$(CXX) $(LIBFFTW) $(LIBFITS) $(LIBGSL) $(CXXFLAGS) -o bestfits main.cpp obj/*.o
+	
+install: cic cosmology file_io galaxy harppi power transformers shells line_of_sight bispec main.cpp
+	$(CXX) $(LIBFFTW) $(LIBFITS) $(LIBGSL) $(CXXFLAGS) -o $(HOME)/bin/bestfits main.cpp obj/*.o
 	
 cic: source/cic.cpp
 	mkdir -p obj

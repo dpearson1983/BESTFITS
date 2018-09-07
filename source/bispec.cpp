@@ -129,7 +129,7 @@ double get_bispectrum_shot_noise(int k1, int k2, int k3, fftw_complex *A_0, fftw
     double k_1 = k_min + (k1 + 0.5)*Delta_k;
     double k_2 = k_min + (k2 + 0.5)*Delta_k;
     double k_3 = k_min + (k3 + 0.5)*Delta_k;
-    double N_1 = 0, N_2 = 0, N_3 = 0;
+    int N_1 = 0, N_2 = 0, N_3 = 0;
     for (size_t i = 0; i < shells[k1].size(); ++i) {
         vec3<double> k1_minus = {-shells[k1][i].x, -shells[k1][i].y, -shells[k1][i].z};
         vec4<size_t> index_plus = get_index(shells[k1][i], k_f, N);
@@ -195,7 +195,7 @@ void get_N_tri(std::string file, std::vector<size_t> &N_tri) {
 }
 
 // Normal mode for calculating the bispectrum. The shell Fourier transforms are calculated ahead of time and
-// stored in memory. This function the simply carries out the pruduct, the summing, the normalization and the 
+// stored in memory. This function the simply carries out the product, the summing, the normalization and the 
 // shot noise subtraction.
 void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
                     vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
