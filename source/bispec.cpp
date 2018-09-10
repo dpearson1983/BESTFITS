@@ -91,7 +91,7 @@ double get_bispectrum_shot_noise(double P_1, double P_2, double P_3, vec3<double
     return SN;
 }
 
-double norm_squared(vec4<size_t> i, vec4<size_t> j, vec3<int> N, fftw_complex *A, fftw_complex *B) {
+double complex_product(vec4<size_t> i, vec4<size_t> j, vec3<int> N, fftw_complex *A, fftw_complex *B) {
     fftw_complex a, b;
     if (i.z > N.z/2) {
         a[0] = A[i.w][0];
@@ -136,10 +136,10 @@ double get_bispectrum_shot_noise(int k1, int k2, int k3, fftw_complex *A_0, fftw
         vec4<size_t> index_plus = get_index(shells[k1][i], k_f, N);
         vec4<size_t> index_minus = get_index(k1_minus, k_f, N);
         if (l == 0) {
-            SN1 += norm_squared(index_plus, index_minus, N, A_0, Fw_0);
+            SN1 += complex_product(index_plus, index_minus, N, A_0, Fw_0);
             N_1++;
         } else if (l == 2) {
-            SN1 += norm_squared(index_plus, index_minus, N, A_2, Fw_0);
+            SN1 += complex_product(index_plus, index_minus, N, A_2, Fw_0);
             N_1++;
         }
     }
@@ -150,10 +150,10 @@ double get_bispectrum_shot_noise(int k1, int k2, int k3, fftw_complex *A_0, fftw
         vec4<size_t> index_plus = get_index(shells[k2][i], k_f, N);
         vec4<size_t> index_minus = get_index(k2_minus, k_f, N);
         if (l == 0) {
-            SN2 += norm_squared(index_plus, index_minus, N, A_0, Fw_0);
+            SN2 += complex_product(index_plus, index_minus, N, A_0, Fw_0);
             N_2++;
         } else if (l == 2) {
-            SN2 += norm_squared(index_plus, index_minus, N, A_0, Fw_2);
+            SN2 += complex_product(index_plus, index_minus, N, A_0, Fw_2);
             N_2++;
         }
     }
@@ -164,10 +164,10 @@ double get_bispectrum_shot_noise(int k1, int k2, int k3, fftw_complex *A_0, fftw
         vec4<size_t> index_plus = get_index(shells[k3][i], k_f, N);
         vec4<size_t> index_minus = get_index(k3_minus, k_f, N);
         if (l == 0) {
-            SN3 += norm_squared(index_plus, index_minus, N, A_0, Fw_0);
+            SN3 += complex_product(index_plus, index_minus, N, A_0, Fw_0);
             N_3++;
         } else if (l == 2) {
-            SN3 += norm_squared(index_plus, index_minus, N, A_0, Fw_2);
+            SN3 += complex_product(index_plus, index_minus, N, A_0, Fw_2);
             N_3++;
         }
     }
@@ -175,7 +175,7 @@ double get_bispectrum_shot_noise(int k1, int k2, int k3, fftw_complex *A_0, fftw
     
     double shotNoise = 0.0;
     if (l == 0) {
-        shotNoise = (SN1 + SN2 + SN3 - 2.0*(gal_bk_nbw.x - alpha*alpha*alpha*ran_bk_nbw.x))/gal_bk_nbw.z;
+        shotNoise = (SN1 + SN2 + SN3 + 2.0*(gal_bk_nbw.x - alpha*alpha*alpha*ran_bk_nbw.x))/gal_bk_nbw.z;
     } else if (l == 2) {
         shotNoise = (SN1 + SN2 + SN3)/gal_bk_nbw.z;
     }
