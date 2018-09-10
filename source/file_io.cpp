@@ -143,36 +143,46 @@ vec3<double> getRMin(std::vector<galaxy> &gals, cosmology &cosmo, vec3<int> N, v
     return r_min;
 }
 
-void readDR12(std::string file, std::vector<double> &delta, vec3<int> N, vec3<double> L, 
-              vec3<double> r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw, 
+void readDR12(std::string file, std::vector<double> &delta, std::vector<double> &delta2, vec3<int> N, 
+              vec3<double> L, vec3<double> r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw, 
               double z_min, double z_max) {
     std::vector<galaxy> gals;
     getDR12Gals(file, gals, z_min, z_max);
     
+    vec3<double> p_dummynbw = {0.0, 0.0, 0.0};
+    vec3<double> b_dummynbw = {0.0, 0.0, 0.0};
+    
     gsl_integration_workspace *ws = gsl_integration_workspace_alloc(10000000);
     for (size_t i = 0; i < gals.size(); ++i) {
         gals[i].bin(delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, ws);
+        gals[i].set_weight(gals[i].get_weight()*gals[i].get_weight());
+        gals[i].bin(delta2, N, L, r_min, cosmo, p_dummynbw, b_dummynbw, ws);
     }
     gsl_integration_workspace_free(ws);
 }
 
-void readDR12Ran(std::string file, std::vector<double> &delta, vec3<int> N, vec3<double> &L, 
-              vec3<double> &r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw, 
-              double z_min, double z_max) {
+void readDR12Ran(std::string file, std::vector<double> &delta, std::vector<double> &delta2, vec3<int> N, 
+                 vec3<double> &L,  vec3<double> &r_min, cosmology &cosmo, vec3<double> &pk_nbw, 
+                 vec3<double> &bk_nbw, double z_min, double z_max) {
     std::vector<galaxy> rans;
     getDR12Rans(file, rans, z_min, z_max);
     
     r_min = getRMin(rans, cosmo, N, L);
     
+    vec3<double> p_dummynbw = {0.0, 0.0, 0.0};
+    vec3<double> b_dummynbw = {0.0, 0.0, 0.0};
+    
     gsl_integration_workspace *ws = gsl_integration_workspace_alloc(10000000);
     for (size_t i = 0; i < rans.size(); ++i) {
         rans[i].bin(delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, ws);
+        rans[i].set_weight(rans[i].get_weight()*rans[i].get_weight());
+        rans[i].bin(delta2, N, L, r_min, cosmo, p_dummynbw, b_dummynbw, ws);
     }
     gsl_integration_workspace_free(ws);
 }
 
-void readPatchy(std::string file, std::vector<double> &delta, vec3<int> N, vec3<double> L, 
-                vec3<double> r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw,
+void readPatchy(std::string file, std::vector<double> &delta, std::vector<double> &delta2, vec3<int> N, 
+                vec3<double> L, vec3<double> r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw,
                 double z_min, double z_max) {
     std::vector<galaxy> gals;
     
@@ -188,17 +198,22 @@ void readPatchy(std::string file, std::vector<double> &delta, vec3<int> N, vec3<
     }
     fin.close();
     
+    vec3<double> p_dummynbw = {0.0, 0.0, 0.0};
+    vec3<double> b_dummynbw = {0.0, 0.0, 0.0};
+    
 //     vec3<double> r_min = getRMin(gals, cosmo, L);
     gsl_integration_workspace *ws = gsl_integration_workspace_alloc(10000000);
     for (size_t i = 0; i < gals.size(); ++i) {
         gals[i].bin(delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, ws);
+        gals[i].set_weight(gals[i].get_weight()*gals[i].get_weight());
+        gals[i].bin(delta2, N, L, r_min, cosmo, p_dummynbw, b_dummynbw, ws);
     }
     gsl_integration_workspace_free(ws);
 }
 
-void readPatchyRan(std::string file, std::vector<double> &delta, vec3<int> N, vec3<double> &L, 
-                vec3<double> &r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw, 
-                double z_min, double z_max) {
+void readPatchyRan(std::string file, std::vector<double> &delta, std::vector<double> &delta2, vec3<int> N, 
+                   vec3<double> &L, vec3<double> &r_min, cosmology &cosmo, vec3<double> &pk_nbw, 
+                   vec3<double> &bk_nbw, double z_min, double z_max) {
     std::vector<galaxy> rans;
     
     std::ifstream fin(file);
@@ -215,16 +230,22 @@ void readPatchyRan(std::string file, std::vector<double> &delta, vec3<int> N, ve
     
     r_min = getRMin(rans, cosmo, N, L);
     
+    vec3<double> p_dummynbw = {0.0, 0.0, 0.0};
+    vec3<double> b_dummynbw = {0.0, 0.0, 0.0};
+    
     gsl_integration_workspace *ws = gsl_integration_workspace_alloc(10000000);
     for (size_t i = 0; i < rans.size(); ++i) {
         rans[i].bin(delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, ws);
+        rans[i].set_weight(rans[i].get_weight()*rans[i].get_weight());
+        rans[i].bin(delta2, N, L, r_min, cosmo, p_dummynbw, b_dummynbw, ws);
     }
     gsl_integration_workspace_free(ws);
 }
 
-void readDensityField(std::string file, std::vector<double> &delta, vec3<int> N, vec3<double> &L, 
-                      vec3<double> &r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw,
-                      double z_min, double z_max) {
+// TODO: Setup implementation to read in a sum or weights squared density field.
+void readDensityField(std::string file, std::vector<double> &delta, std::vector<double> &delta2, vec3<int> N, 
+                      vec3<double> &L, vec3<double> &r_min, cosmology &cosmo, vec3<double> &pk_nbw, 
+                      vec3<double> &bk_nbw, double z_min, double z_max) {
     if (delta.size() != N.x*N.y*N.z) {
         delta.resize(N.x*N.y*N.z);
     }
@@ -256,28 +277,28 @@ void setFileType(std::string typeString, FileType &type) {
     }
 }
 
-void readFile(std::string file, std::vector<double> &delta, vec3<int> N, vec3<double> &L, 
-              vec3<double> &r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw,
+void readFile(std::string file, std::vector<double> &delta, std::vector<double> &delta2, vec3<int> N, 
+              vec3<double> &L, vec3<double> &r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw,
               double z_min, double z_max, FileType type) {
     switch(type) {
         case dr12:
             std::cout << "Reading file type: DR12" << std::endl;
-            readDR12(file, delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
+            readDR12(file, delta, delta2, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
             break;
         case patchy:
             std::cout << "Reading file type: patchy" << std::endl;
-            readPatchy(file, delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
+            readPatchy(file, delta, delta2, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
             break;
         case dr12_ran:
             std::cout << "Reading file type: DR12_ran" << std::endl;
-            readDR12Ran(file, delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
+            readDR12Ran(file, delta, delta2, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
             break;
         case patchy_ran:
             std::cout << "Reading file type: patchy_ran" << std::endl;
-            readPatchyRan(file, delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
+            readPatchyRan(file, delta, delta2, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
         case density_field:
             std::cout << "Reading file type: density_field" << std::endl;
-            readDensityField(file, delta, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
+            readDensityField(file, delta, delta2, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
             break;
         default:
             std::stringstream err_msg;

@@ -91,7 +91,7 @@ double get_bispectrum_shot_noise(double P_1, double P_2, double P_3, vec3<double
     return SN;
 }
 
-double real_part(vec4<size_t> i, vec4<size_t> j, vec3<int> N, fftw_complex *A, fftw_complex *B) {
+double norm_squared(vec4<size_t> i, vec4<size_t> j, vec3<int> N, fftw_complex *A, fftw_complex *B) {
     fftw_complex a, b;
     if (i.z > N.z/2) {
         a[0] = A[i.w][0];
@@ -102,11 +102,11 @@ double real_part(vec4<size_t> i, vec4<size_t> j, vec3<int> N, fftw_complex *A, f
     }
     
     if (j.z > N.z/2) {
-        b[0] = B[i.w][0];
-        b[1] = -B[i.w][1];
+        b[0] = B[j.w][0];
+        b[1] = -B[j.w][1];
     } else {
-        b[0] = B[i.w][0];
-        b[1] = B[i.w][1];
+        b[0] = B[j.w][0];
+        b[1] = B[j.w][1];
     }
     
     return a[0]*b[0] + a[1]*b[1];
@@ -136,42 +136,42 @@ double get_bispectrum_shot_noise(int k1, int k2, int k3, fftw_complex *A_0, fftw
         vec4<size_t> index_plus = get_index(shells[k1][i], k_f, N);
         vec4<size_t> index_minus = get_index(k1_minus, k_f, N);
         if (l == 0) {
-            SN1 += real_part(index_plus, index_minus, N, A_0, Fw_0);
+            SN1 += norm_squared(index_plus, index_minus, N, A_0, Fw_0);
             N_1++;
         } else if (l == 2) {
-            SN1 += real_part(index_plus, index_minus, N, A_2, Fw_0);
+            SN1 += norm_squared(index_plus, index_minus, N, A_2, Fw_0);
             N_1++;
         }
     }
-    SN1 *= (2*l + 1)*V_f/N_1;
+    SN1 *= (2*l + 1)/N_1;
     
     for (size_t i = 0; i < shells[k2].size(); ++i) {
         vec3<double> k2_minus = {-shells[k2][i].x, -shells[k2][i].y, -shells[k2][i].z};
         vec4<size_t> index_plus = get_index(shells[k2][i], k_f, N);
         vec4<size_t> index_minus = get_index(k2_minus, k_f, N);
         if (l == 0) {
-            SN2 += real_part(index_plus, index_minus, N, A_0, Fw_0);
+            SN2 += norm_squared(index_plus, index_minus, N, A_0, Fw_0);
             N_2++;
         } else if (l == 2) {
-            SN2 += real_part(index_plus, index_minus, N, A_0, Fw_2);
+            SN2 += norm_squared(index_plus, index_minus, N, A_0, Fw_2);
             N_2++;
         }
     }
-    SN2 *= (2*l + 1)*V_f*L_2(get_mu(k_1, k_2, k_3))/N_2;
+    SN2 *= (2*l + 1)*L_2(get_mu(k_1, k_2, k_3))/N_2;
     
     for (size_t i = 0; i < shells[k3].size(); ++i) {
         vec3<double> k3_minus = {-shells[k3][i].x, -shells[k3][i].y, -shells[k3][i].z};
         vec4<size_t> index_plus = get_index(shells[k3][i], k_f, N);
         vec4<size_t> index_minus = get_index(k3_minus, k_f, N);
         if (l == 0) {
-            SN3 += real_part(index_plus, index_minus, N, A_0, Fw_0);
+            SN3 += norm_squared(index_plus, index_minus, N, A_0, Fw_0);
             N_3++;
         } else if (l == 2) {
-            SN3 += real_part(index_plus, index_minus, N, A_0, Fw_2);
+            SN3 += norm_squared(index_plus, index_minus, N, A_0, Fw_2);
             N_3++;
         }
     }
-    SN3 *= (2*l + 1)*V_f*L_2(get_mu(k_1, k_3, k_2))/N_3;
+    SN3 *= (2*l + 1)*L_2(get_mu(k_1, k_3, k_2))/N_3;
     
     double shotNoise = 0.0;
     if (l == 0) {

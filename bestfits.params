@@ -23,8 +23,8 @@ string wisdomFile = fftwWisdom.dat
 string shellBase = shell
 string shellExt = bin
 
-string pkFile = galaxy_DR12v5_CMASS_North_P0.dat
-string outFile = galaxy_DR12v5_CMASS_North_B0.dat
+string pkFile = galaxy_DR12v5_CMASS_North_P0_2.dat
+string outFile = galaxy_DR12v5_CMASS_North_B0_2.dat
 
 bool lowMemoryMode = false
 bool calcQuadrupole = true

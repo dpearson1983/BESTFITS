@@ -23,6 +23,10 @@ class galaxy{
         vec3<double> get_unshifted_cart(cosmology &cosmo, gsl_integration_workspace *ws);
     
         vec3<double> get_cart();
+        
+        double get_weight();
+        
+        void set_weight(double weight);
 };
 
 #endif

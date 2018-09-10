@@ -73,3 +73,11 @@ void galaxy::bin(std::vector<double> &delta, vec3<int> N, vec3<double> L, vec3<d
         throw std::runtime_error(err_msg.str());
     }
 }
+
+double galaxy::get_weight() {
+    return galaxy::w;
+}
+
+void galaxy::set_weight(double weight) {
+    galaxy::w = weight;
+}
