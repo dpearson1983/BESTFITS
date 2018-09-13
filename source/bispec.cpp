@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <algorithm>
 #include <sstream>
 #include <string>
 #include <cmath>
@@ -41,6 +42,115 @@ vec4<size_t> get_index(vec3<double> k, vec3<double> k_f, vec3<int> N) {
     }
     
     return index;
+}
+
+double get_mag(vec3<double> k) {
+    return sqrt(k.x*k.x + k.y*k.y + k.z*k.z);
+}    
+
+int get_bin(vec3<double> k_1, vec3<double> k_2, vec3<double> k_3, double delta_k, double k_min, double k_max) {
+    int N_k = (k_max - k_min)/delta_k;
+    std::vector<double> ks;
+    ks.push_back(get_mag(k_1));
+    ks.push_back(get_mag(k_2));
+    ks.push_back(get_mag(k_3));
+    std::sort(ks.begin(), ks.end());
+    
+    int k1_i = (ks[0] - k_min)/delta_k;
+    int k2_i = (ks[1] - k_min)/delta_k;
+    int k3_i = (ks[2] - k_min)/delta_k;
+    
+    int bispecBin = 0;
+    for (int i = 0; i < N_k; ++i) {
+        double k1 = k_min + (i + 0.5)*delta_k;
+        for (int j = i; j < N_k; ++j) {
+            double k2 = k_min + (j + 0.5)*delta_k;
+            for (int k = j; k < N_k; ++k) {
+                double k3 = k_min + (k + 0.5)*delta_k;
+                if (k3 <= k1 + k2) {
+                    if (k1_i == i && k2_i == j && k3_i == k) {
+                        return bispecBin;
+                    }
+                    bispecBin++;
+                }
+            }
+        }
+    }
+    
+    std::cout << "k1_i = " << k1_i << std::endl;
+    std::cout << "k2_i = " << k2_i << std::endl;
+    std::cout << "k3_i = " << k3_i << std::endl;
+    std::cout << ks[0] << " " << ks[1] << " " << ks[2] << std::endl;
+    
+    return -1;
+}
+
+double get_power(size_t index, fftw_complex *A, fftw_complex *B) {
+    return A[index][0]*B[index][0] + A[index][1]*B[index][1];
+}
+    
+void process_shells(std::vector<std::vector<double>> &covariance, std::vector<std::vector<size_t>> &N_tri,
+                    std::vector<vec3<double>> &k_1, std::vector<vec3<double>> &k_2, fftw_complex *A_0,
+                    fftw_complex *A_2, vec3<double> k_f, vec3<int> N, double delta_k, double k_min,
+                    double k_max, int N_bin) {
+    for (int i = 0; i < k_1.size(); ++i) {
+        int k1_bin = (get_mag(k_1[i]) - k_min)/delta_k;
+        double k1_bin_mag = k_min + (k1_bin + 0.5)*delta_k;
+        for (int j = 0; j < k_2.size(); ++j) {
+            int k2_bin = (get_mag(k_2[i]) - k_min)/delta_k;
+            double k2_bin_mag = k_min + (k2_bin + 0.5)*delta_k;
+            vec3<double> k_3 = {-k_1[i].x - k_2[j].x, -k_1[i].y - k_2[j].y, -k_1[i].z - k_2[j].z};
+            vec4<size_t> k1_index = get_index(k_1[i], k_f, N);
+            vec4<size_t> k2_index = get_index(k_2[j], k_f, N);
+            vec4<size_t> k3_index = get_index(k_3, k_f, N);
+            int k3_bin = (get_mag(k_3) - k_min)/delta_k;
+            double k3_bin_mag = k_min + (k3_bin + 0.5)*delta_k;
+            std::vector<double> ks = {k1_bin_mag, k2_bin_mag, k3_bin_mag};
+            std::sort(ks.begin(), ks.end());
+            if (ks[2] <= ks[0] + ks[1] && get_mag(k_3) < k_max && get_mag(k_3) >= k_min) {
+                int monopole_bin = get_bin(k_1[i], k_2[j], k_3, delta_k, k_min, k_max);
+                int quadrupole_bin = monopole_bin + N_bin;
+                if (monopole_bin >= 0) {
+                    covariance[monopole_bin][monopole_bin] += get_power(k1_index.w, A_0, A_0)*get_power(k2_index.w, A_0, A_0)*get_power(k3_index.w, A_0, A_0);
+                    covariance[quadrupole_bin][quadrupole_bin] += get_power(k1_index.w, A_0, A_2)*get_power(k2_index.w, A_0, A_2)*get_power(k3_index.w, A_0, A_0);
+                    covariance[monopole_bin][quadrupole_bin] += get_power(k1_index.w, A_0, A_2)*get_power(k2_index.w, A_0, A_0)*get_power(k3_index.w, A_0, A_0);
+                    covariance[quadrupole_bin][monopole_bin] += get_power(k1_index.w, A_0, A_2)*get_power(k2_index.w, A_0, A_0)*get_power(k3_index.w, A_0, A_0);
+                    N_tri[monopole_bin][monopole_bin]++;
+                    N_tri[quadrupole_bin][quadrupole_bin]++;
+                    N_tri[monopole_bin][quadrupole_bin]++;
+                    N_tri[quadrupole_bin][monopole_bin]++;
+                } else {
+                    std::stringstream errMsg;
+                    errMsg << "Bispectrum bin number not found" << std::endl;
+                    errMsg << "(" << get_mag(k_1[i]) << ", " << get_mag(k_2[j]) << ", " << get_mag(k_3) << ")" << std::endl;
+                    throw std::runtime_error(errMsg.str());
+                }
+            }
+        }
+    }
+}
+            
+
+void get_covariance(std::vector<std::vector<double>> &covariance, std::vector<std::vector<size_t>> &N_tri,
+                    std::vector<std::vector<vec3<double>>> &shells, std::vector<double> &A_0, std::vector<double> &A_2, vec3<int> N, vec3<double> L, double delta_k, double k_min, double k_max, int N_bin) {
+    
+    vec3<double> k_f = {2.0*PI/L.x, 2.0*PI/L.y, 2.0*PI/L.z};
+    
+    for (int i = 0; i < shells.size(); ++i) {
+        for (int j = i; j < shells.size(); ++j) {
+            process_shells(covariance, N_tri, shells[i], shells[j], (fftw_complex *)A_0.data(), 
+                           (fftw_complex *)A_2.data(), k_f, N, delta_k, k_min, k_max, N_bin);
+            
+        }
+    }
+    
+    for (size_t i = 0; i < covariance.size(); ++i) {
+        for (size_t j = 0; j < covariance[i].size(); ++j) {
+            if (N_tri[i][j] > 0) {
+                covariance[i][j] /= N_tri[i][j];
+            }
+        }
+    }
 }
 
 size_t get_actual_triangles(const vec3<int> N, const vec3<double> L, std::vector<vec3<double>> &k1,
@@ -449,3 +559,26 @@ void get_bispectrum_quad(std::vector<double> &ks, std::vector<double> &P, vec3<d
         }
     }
 }
+
+int getNumBispecBins(double k_min, double k_max, double binWidth, std::vector<vec3<double>> &ks) {
+    int totBins = 0;
+    int N = (k_max - k_min)/binWidth;
+    
+    for (int i = 0; i < N; ++i) {
+        double k_1 = k_min + (i + 0.5)*binWidth;
+        for (int j = i; j < N; ++j) {
+            double k_2 = k_min + (j + 0.5)*binWidth;
+            for (int k = j; k < N; ++k) {
+                double k_3 = k_min + (k + 0.5)*binWidth;
+                if (k_3 <= k_1 + k_2 && k_3 <= k_max) {
+                    totBins++;
+                    vec3<double> kt = {k_1, k_2, k_3};
+                    ks.push_back(kt);
+                }
+            }
+        }
+    }
+    
+    return totBins;
+}
+

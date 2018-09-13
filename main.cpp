@@ -238,5 +238,15 @@ int main(int argc, char *argv[]) {
     }
     writeBispectrumFile(p.gets("outFile"), k_trip, B);
     
+//     std::cout << "Getting number of bispectrum bins..." << std::endl;
+//     int bispecBins = getNumBispecBins(k_min, k_max, delta_k, k_trip);
+//     std::cout << "Setting up storage for the covariance..." << std::endl;
+//     std::vector<std::vector<double>> covariance(2*bispecBins, std::vector<double>(2*bispecBins));
+//     std::vector<std::vector<size_t>> N_tri(2*bispecBins, std::vector<size_t>(2*bispecBins));
+//     std::cout << "Getting covariance..." << std::endl;
+//     get_covariance(covariance, N_tri, shells, A_0, A_2, N, L, delta_k, k_min, k_max, bispecBins);
+//     std::cout << "Outputting covariance..." << std::endl;
+//     writeCovarianceFile(p.gets("covarianceFile"), covariance);
+    
     return 0;
 }

@@ -361,3 +361,13 @@ void writeTriangleFile(std::vector<size_t> &N_tri, vec3<double> L, double k_min,
     fout.close();
 }
     
+void writeCovarianceFile(std::string file, std::vector<std::vector<double>> &covariance) {
+    std::ofstream fout(file);
+    for (int i = 0; i < covariance.size(); ++i) {
+        for (int j = 0; j < covariance[i].size(); ++j) {
+            fout.width(20);
+            fout << covariance[i][j];
+        }
+        fout << "\n";
+    }
+}

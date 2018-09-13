@@ -5,6 +5,9 @@
 #include <string>
 #include "tpods.h"
 
+void get_covariance(std::vector<std::vector<double>> &covariance, std::vector<std::vector<size_t>> &N_tri,
+                    std::vector<std::vector<vec3<double>>> &shells, std::vector<double> &A_0, std::vector<double> &A_2, vec3<int> N, vec3<double> L, double delta_k, double k_min, double k_max, int N_bin);
+
 double get_bispectrum_shot_noise(double P_1, double P_2, double P_3, vec3<double> gal_bk_nbw, 
                                  vec3<double> ran_bk_nbw, double alpha);
 
@@ -47,5 +50,7 @@ void get_bispectrum_quad(std::vector<double> &ks, std::vector<double> &P, vec3<d
                     std::vector<double> &A_0, std::vector<double> &A_2, std::vector<double> &kx, 
                     std::vector<double> &ky, std::vector<double> &kz, double k_min, double k_max, double delta_k, 
                     std::string wisdomFile, std::vector<double> &SN, bool exactTriangles);
+
+int getNumBispecBins(double k_min, double k_max, double binWidth, std::vector<vec3<double>> &ks);
 
 #endif

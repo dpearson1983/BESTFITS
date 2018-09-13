@@ -36,4 +36,6 @@ std::string triangleFilename(vec3<double> L, double k_min, double k_max);
 
 void writeTriangleFile(std::vector<size_t> &N_tri, vec3<double> L, double k_min, double k_max);
 
+void writeCovarianceFile(std::string file, std::vector<std::vector<double>> &covariance);
+
 #endif
