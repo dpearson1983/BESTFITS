@@ -276,6 +276,12 @@ void readGadget2_ran(std::string file, std::vector<double> &delta, std::vector<d
     L.y = header.boxSize/1000.0;
     L.z = header.boxSize/1000.0;
     
+    r_min.x = 0.0;
+    r_min.y = 0.0;
+    r_min.z = 0.0;
+    
+    std::cout << "(" << N.x << ", " << N.y << ", " << N.z << ")" << std::endl;
+    
     double dV = (L.x*L.y*L.z)/(N.x*N.y*N.z);
     
     unsigned int totalParticles = 0;
@@ -352,6 +358,7 @@ void readFile(std::string file, std::vector<double> &delta, std::vector<double> 
         case gadget2_ran:
             std::cout << "Reading file type: gadget2_ran" << std::endl;
             readGadget2_ran(file, delta, delta2, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
+            break;
         default:
             std::stringstream err_msg;
             err_msg << "Unrecognized or unsupported file type.\n";

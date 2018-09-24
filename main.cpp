@@ -166,6 +166,18 @@ int main(int argc, char *argv[]) {
     normalizePower(P, N_k, gal_pk_nbw.z);
     writePowerSpectrumFile(p.gets("pkFile"), ks, P);
     
+    std::vector<double> ks_ext;
+    for (int i = 0; i < p.geti("num_pk_bins"); ++i) {
+        double k = p.getd("pk_min") + (i + 0.5)*delta_k;
+        ks_ext.push_back(k);
+    }
+    std::vector<double> Pk(p.geti("num_pk_bins"));
+    std::vector<int> Nk(p.geti("num_pk_bins"));
+    binFrequencies((fftw_complex *)A_0.data(), Pk, Nk, N, kx, ky, kz, delta_k, p.getd("pk_min"), p.getd("pk_max"),
+                   PkShotNoise);
+    normalizePower(Pk, Nk, gal_pk_nbw.z);
+    writePowerSpectrumFile(p.gets("bigPkFile"), ks_ext, Pk);
+    
     std::cout << gal_bk_nbw.z << std::endl;
     
     std::cout << "Computing the bispectrum monopole..." << std::endl;

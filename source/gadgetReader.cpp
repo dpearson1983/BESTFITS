@@ -230,7 +230,7 @@ void read_gadget_snapshot(std::string snapshot, gadget_header &header, std::vect
             for (unsigned int j = 0; j < header.N_p[i]; ++j) {
                 vec3<float> part;
                 fin.read((char *) &part, sizeof(vec3<float>));
-                vec3<double> pos = {(double)part.x, (double)part.y, (double)part.z};
+                vec3<double> pos = {(double)part.x/1000.0, (double)part.y/1000.0, (double)part.z/1000.0};
                 std::vector<size_t> indices;
                 std::vector<double> weights;
                 

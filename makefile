@@ -11,7 +11,7 @@ build: cic cosmology gadgetReader file_io galaxy harppi power transformers shell
 debug_build: d_cic d_cosmology d_file_io d_galaxy d_harppi d_power d_transformers d_shells d_line_of_sight d_bispec main.cpp
 	$(CXX) $(LIBFFTW) $(LIBFITS) $(LIBGSL) $(CXXDEBUG) -o $(HOME)/bin/bestfits_debug main.cpp obj/*.o
 	
-install: cic cosmology file_io galaxy harppi power transformers shells line_of_sight bispec main.cpp
+install: cic cosmology gadgetReader file_io galaxy harppi power transformers shells line_of_sight bispec main.cpp
 	$(CXX) $(LIBFFTW) $(LIBFITS) $(LIBGSL) $(CXXFLAGS) -o $(HOME)/bin/bestfits main.cpp obj/*.o
 	
 cic: source/cic.cpp
