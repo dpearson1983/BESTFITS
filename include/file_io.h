@@ -24,7 +24,7 @@ void readFile(std::string file, std::vector<double> &delta, std::vector<double> 
               vec3<double> &L, vec3<double> &r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw,
               double z_min, double z_max, FileType type);
 
-void writeBispectrumFile(std::string file, std::vector<vec3<double>> &ks, std::vector<double> &B);
+void writeBispectrumFile(std::string file, std::vector<vec4<double>> &ks, std::vector<double> &B);
 
 void writeShellFile(std::string file, std::vector<double> &shell, vec3<int> N);
 

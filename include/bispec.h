@@ -21,36 +21,36 @@ void generate_triangle_file(const vec3<int> N, const vec3<double> L, double k_mi
 
 void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
                     vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
-                    std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
+                    std::vector<double> &B, std::vector<vec4<double>> &k_trip, 
                     std::vector<std::vector<double>> &shells, double delta_k, double k_min, double k_max,
                     bool exactTriangles);
 
 void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
                     vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
-                    std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
+                    std::vector<double> &B, std::vector<vec4<double>> &k_trip, 
                     std::vector<std::vector<double>> &shells, double delta_k, double k_min, double k_max, 
                     std::vector<double> &SN, bool exactTriangles);
 
 void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
                     vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
-                    std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
+                    std::vector<double> &B, std::vector<vec4<double>> &k_trip, 
                     std::vector<double> &delta, std::vector<double> &kx, std::vector<double> &ky, 
                     std::vector<double> &kz, double k_min, double k_max, double delta_k, std::string wisdomFile, 
                     bool exactTriangles);
 
 void get_bispectrum_quad(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
                     vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
-                    std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
+                    std::vector<double> &B, std::vector<vec4<double>> &k_trip, 
                     std::vector<std::vector<double>> &A0_shells, std::vector<std::vector<double>> &A2_shells,
                     double delta_k, double k_min, double k_max, std::vector<double> &SN, bool exactTriangles);
 
 void get_bispectrum_quad(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
                     vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
-                    std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
+                    std::vector<double> &B, std::vector<vec4<double>> &k_trip, 
                     std::vector<double> &A_0, std::vector<double> &A_2, std::vector<double> &kx, 
                     std::vector<double> &ky, std::vector<double> &kz, double k_min, double k_max, double delta_k, 
                     std::string wisdomFile, std::vector<double> &SN, bool exactTriangles);
 
-int getNumBispecBins(double k_min, double k_max, double binWidth, std::vector<vec3<double>> &ks);
+int getNumBispecBins(double k_min, double k_max, double binWidth, std::vector<vec4<double>> &ks);
 
 #endif

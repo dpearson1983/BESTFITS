@@ -240,7 +240,7 @@ double get_bispectrum_shot_noise(int k1, int k2, int k3, fftw_complex *A_0, fftw
     double k_1 = k_min + (k1 + 0.5)*Delta_k;
     double k_2 = k_min + (k2 + 0.5)*Delta_k;
     double k_3 = k_min + (k3 + 0.5)*Delta_k;
-    int N_1 = 0, N_2 = 0, N_3 = 0;
+    double N_1 = 0, N_2 = 0, N_3 = 0;
     for (size_t i = 0; i < shells[k1].size(); ++i) {
         vec3<double> k1_minus = {-shells[k1][i].x, -shells[k1][i].y, -shells[k1][i].z};
         vec4<size_t> index_plus = get_index(shells[k1][i], k_f, N);
@@ -267,7 +267,11 @@ double get_bispectrum_shot_noise(int k1, int k2, int k3, fftw_complex *A_0, fftw
             N_2++;
         }
     }
-    SN2 *= (2*l + 1)*L_2(get_mu(k_1, k_2, k_3))/N_2;
+    if (l == 0) {
+        SN2 /= N_2;
+    } else if (l == 2) {
+        SN2 *= (2*l + 1)*L_2(get_mu(k_1, k_2, k_3))/N_2;
+    }
     
     for (size_t i = 0; i < shells[k3].size(); ++i) {
         vec3<double> k3_minus = {-shells[k3][i].x, -shells[k3][i].y, -shells[k3][i].z};
@@ -281,11 +285,15 @@ double get_bispectrum_shot_noise(int k1, int k2, int k3, fftw_complex *A_0, fftw
             N_3++;
         }
     }
-    SN3 *= (2*l + 1)*L_2(get_mu(k_1, k_3, k_2))/N_3;
+    if (l == 0) {
+        SN3 /= N_3;
+    } else if (l == 2) {
+        SN3 *= (2*l + 1)*L_2(get_mu(k_1, k_3, k_2))/N_3;
+    }
     
     double shotNoise = 0.0;
     if (l == 0) {
-        shotNoise = (SN1 + SN2 + SN3 + 2.0*(gal_bk_nbw.x - alpha*alpha*alpha*ran_bk_nbw.x))/gal_bk_nbw.z;
+        shotNoise = (SN1 + SN2 + SN3 - 2.0*(gal_bk_nbw.x - alpha*alpha*alpha*ran_bk_nbw.x))/gal_bk_nbw.z;
     } else if (l == 2) {
         shotNoise = (SN1 + SN2 + SN3)/gal_bk_nbw.z;
     }
@@ -310,10 +318,11 @@ void get_N_tri(std::string file, std::vector<size_t> &N_tri) {
 // shot noise subtraction.
 void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
                     vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
-                    std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
+                    std::vector<double> &B, std::vector<vec4<double>> &k_trip, 
                     std::vector<std::vector<double>> &shells, double delta_k, double k_min, double k_max, 
                     bool exactTriangles) {
-    vec3<double> kt;
+    vec4<double> kt;
+    kt.w = 0;
     double V_f = get_V_f(L);
     double N_tot = N.x*N.y*N.z;
     double alpha3 = alpha*alpha*alpha;
@@ -354,9 +363,10 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
 
 void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
                     vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
-                    std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
+                    std::vector<double> &B, std::vector<vec4<double>> &k_trip, 
                     std::vector<std::vector<double>> &shells, double delta_k, double k_min, double k_max, std::vector<double> &SN, bool exactTriangles) {
-    vec3<double> kt;
+    vec4<double> kt;
+    kt.w = 0;
     double V_f = get_V_f(L);
     double N_tot = N.x*N.y*N.z;
     double alpha3 = alpha*alpha*alpha;
@@ -399,7 +409,7 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
 // only use low memory mode when absolutely necessary.
 void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
                     vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
-                    std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
+                    std::vector<double> &B, std::vector<vec4<double>> &k_trip, 
                     std::vector<double> &delta, std::vector<double> &kx, std::vector<double> &ky, 
                     std::vector<double> &kz, double k_min, double k_max, double delta_k, std::string wisdomFile, 
                     bool exactTriangles) {
@@ -411,7 +421,8 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
     generate_wisdom_bipc2r(shell_3, N, wisdomFile, omp_get_max_threads());
     double N_tot = N.x*N.y*N.z;
     double V_f = get_V_f(L);
-    vec3<double> kt;
+    vec4<double> kt;
+    kt.w = 0;
     double alpha3 = alpha*alpha*alpha;
     std::vector<size_t> N_tri;
     if (exactTriangles) {
@@ -459,10 +470,11 @@ void get_bispectrum(std::vector<double> &ks, std::vector<double> &P, vec3<double
 
 void get_bispectrum_quad(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
                     vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
-                    std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
+                    std::vector<double> &B, std::vector<vec4<double>> &k_trip, 
                     std::vector<std::vector<double>> &A0_shells, std::vector<std::vector<double>> &A2_shells,
                     double delta_k, double k_min, double k_max, std::vector<double> &SN, bool exactTriangles) {
-    vec3<double> kt;
+    vec4<double> kt;
+    kt.w = 2;
     double V_f = get_V_f(L);
     double N_tot = N.x*N.y*N.z;
     double alpha3 = alpha*alpha*alpha;
@@ -505,7 +517,7 @@ void get_bispectrum_quad(std::vector<double> &ks, std::vector<double> &P, vec3<d
 // only use low memory mode when absolutely necessary.
 void get_bispectrum_quad(std::vector<double> &ks, std::vector<double> &P, vec3<double> gal_bk_nbw,
                     vec3<double> ran_bk_nbw, vec3<int> N, vec3<double> L, double alpha, 
-                    std::vector<double> &B, std::vector<vec3<double>> &k_trip, 
+                    std::vector<double> &B, std::vector<vec4<double>> &k_trip, 
                     std::vector<double> &A_0, std::vector<double> &A_2, std::vector<double> &kx, 
                     std::vector<double> &ky, std::vector<double> &kz, double k_min, double k_max, double delta_k, 
                     std::string wisdomFile, std::vector<double> &SN, bool exactTriangles) {
@@ -517,7 +529,8 @@ void get_bispectrum_quad(std::vector<double> &ks, std::vector<double> &P, vec3<d
     generate_wisdom_bipc2r(shell_3, N, wisdomFile, omp_get_max_threads());
     double N_tot = N.x*N.y*N.z;
     double V_f = get_V_f(L);
-    vec3<double> kt;
+    vec4<double> kt;
+    kt.w = 2;
     std::vector<size_t> N_tri;
     if (exactTriangles) {
         std::string triangleFile = triangleFilename(L, k_min, k_max);
@@ -560,7 +573,7 @@ void get_bispectrum_quad(std::vector<double> &ks, std::vector<double> &P, vec3<d
     }
 }
 
-int getNumBispecBins(double k_min, double k_max, double binWidth, std::vector<vec3<double>> &ks) {
+int getNumBispecBins(double k_min, double k_max, double binWidth, std::vector<vec4<double>> &ks) {
     int totBins = 0;
     int N = (k_max - k_min)/binWidth;
     
@@ -572,7 +585,7 @@ int getNumBispecBins(double k_min, double k_max, double binWidth, std::vector<ve
                 double k_3 = k_min + (k + 0.5)*binWidth;
                 if (k_3 <= k_1 + k_2 && k_3 <= k_max) {
                     totBins++;
-                    vec3<double> kt = {k_1, k_2, k_3};
+                    vec4<double> kt = {k_1, k_2, k_3, 0};
                     ks.push_back(kt);
                 }
             }

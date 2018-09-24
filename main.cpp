@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
         #pragma omp parallel for
         for (size_t i = 0; i < delta.size(); ++i) {
             delta[i] = gal[i] - alpha*ran[i];
-            Fw[i] = (gal2[i] + alpha*alpha*ran2[i]);
+            Fw[i] = gal2[i] + alpha*alpha*ran2[i];
         }
     }
     std::cout << "Done!" << std::endl;
@@ -171,7 +171,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Computing the bispectrum monopole..." << std::endl;
     double start = omp_get_wtime();
     std::vector<double> B;
-    std::vector<vec3<double>> k_trip;
+    std::vector<vec4<double>> k_trip;
     if (p.getb("lowMemoryMode")) {        
         get_bispectrum(ks, P, gal_bk_nbw, ran_bk_nbw, N, L, alpha, B, k_trip, A_0, kx, ky, kz, k_min, k_max,
                        delta_k, p.gets("wisdomFile"), p.getb("exactTriangles"));

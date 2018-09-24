@@ -308,11 +308,11 @@ void readFile(std::string file, std::vector<double> &delta, std::vector<double> 
     }
 }
 
-void writeBispectrumFile(std::string file, std::vector<vec3<double>> &ks, std::vector<double> &B) {
+void writeBispectrumFile(std::string file, std::vector<vec4<double>> &ks, std::vector<double> &B) {
     std::ofstream fout(file);
     fout.precision(15);
     for (size_t i = 0; i < B.size(); ++i) {
-        fout << ks[i].x << " " << ks[i].y << " " << ks[i].z << " " << B[i] << "\n";
+        fout << ks[i].w << " " << ks[i].x << " " << ks[i].y << " " << ks[i].z << " " << B[i] << "\n";
     }
     fout.close();
 }
