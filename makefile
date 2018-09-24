@@ -5,7 +5,7 @@ LIBFFTW = -lfftw3 -lfftw3_omp
 LIBFITS = -lCCfits -lcfitsio
 LIBGSL = -lgsl -lgslcblas -lm
 
-build: cic cosmology file_io galaxy harppi power transformers shells line_of_sight bispec main.cpp
+build: cic cosmology gadgetReader file_io galaxy harppi power transformers shells line_of_sight bispec main.cpp
 	$(CXX) $(LIBFFTW) $(LIBFITS) $(LIBGSL) $(CXXFLAGS) -o bestfits main.cpp obj/*.o
 	
 debug_build: d_cic d_cosmology d_file_io d_galaxy d_harppi d_power d_transformers d_shells d_line_of_sight d_bispec main.cpp
@@ -21,6 +21,10 @@ cic: source/cic.cpp
 cosmology: source/cosmology.cpp
 	mkdir -p obj
 	$(CXX) $(LIBGSL) $(CXXFLAGS) -c -o obj/cosmology.o source/cosmology.cpp
+	
+gadgetReader: source/gadgetReader.cpp
+	mkdir -p obj
+	$(CXX) $(CXXFLAGS) -c -o obj/gadgetReader.o source/gadgetReader.cpp
 	
 file_io: source/file_io.cpp
 	mkdir -p obj

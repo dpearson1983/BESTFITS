@@ -13,7 +13,9 @@ enum FileType{
     patchy,
     dr12_ran,
     patchy_ran,
-    density_field
+    density_field,
+    gadget2,
+    gadget2_ran
 };
 
 bool FileExists(const std::string& name);

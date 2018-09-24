@@ -8,6 +8,7 @@
 #include <gsl/gsl_integration.h>
 #include "../include/file_io.h"
 #include "../include/tpods.h"
+#include "../include/gadgetReader.h"
 #include "../include/galaxy.h"
 #include "../include/cosmology.h"
 
@@ -258,6 +259,46 @@ void readDensityField(std::string file, std::vector<double> &delta, std::vector<
     fin.close();
 }
 
+void readGadget2(std::string file, std::vector<double> &delta, std::vector<double> &delta2, vec3<int> N, vec3<double> L,
+                 vec3<double> r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw, double z_min,
+                 double z_max) {
+    gadget_header header;
+    read_gadget_snapshot(file, header, delta, delta2, N, L, pk_nbw, bk_nbw);
+}
+
+void readGadget2_ran(std::string file, std::vector<double> &delta, std::vector<double> &delta2, vec3<int> N, 
+                     vec3<double> &L, vec3<double> &r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw,
+                     double z_min, double z_max) {
+    gadget_header header;
+    read_gadget_header(file, header);
+    
+    L.x = header.boxSize/1000.0;
+    L.y = header.boxSize/1000.0;
+    L.z = header.boxSize/1000.0;
+    
+    double dV = (L.x*L.y*L.z)/(N.x*N.y*N.z);
+    
+    unsigned int totalParticles = 0;
+    for (int i = 0; i < 6; ++i) 
+        totalParticles += header.N_tot[i];
+    
+    double nbar = totalParticles/(L.x*L.y*L.z);
+    double n_avg = nbar*dV;
+    
+    for (size_t i = 0; i < delta.size(); ++i) {
+        delta[i] = n_avg;
+        delta2[i] = n_avg;
+        
+        pk_nbw.x += n_avg;
+        pk_nbw.y += n_avg;
+        pk_nbw.z += nbar*n_avg;
+        
+        bk_nbw.x += n_avg;
+        bk_nbw.y += nbar*n_avg;
+        bk_nbw.z += nbar*nbar*n_avg;
+    }
+}
+
 void setFileType(std::string typeString, FileType &type) {
     std::cout << "Setting file type " << typeString << std::endl;
     if (typeString == "DR12") {
@@ -270,6 +311,10 @@ void setFileType(std::string typeString, FileType &type) {
         type = patchy_ran;
     } else if (typeString == "density_field") {
         type = density_field;
+    } else if (typeString == "gadget2") {
+        type = gadget2;
+    } else if (typeString == "gadget2_ran") {
+        type = gadget2_ran;
     } else {
         std::stringstream err_msg;
         err_msg << "Unrecognized or unsupported file type.\n";
@@ -300,6 +345,13 @@ void readFile(std::string file, std::vector<double> &delta, std::vector<double> 
             std::cout << "Reading file type: density_field" << std::endl;
             readDensityField(file, delta, delta2, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
             break;
+        case gadget2:
+            std::cout << "Reading file type: gadget2" << std::endl;
+            readGadget2(file, delta, delta2, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
+            break;
+        case gadget2_ran:
+            std::cout << "Reading file type: gadget2_ran" << std::endl;
+            readGadget2_ran(file, delta, delta2, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
         default:
             std::stringstream err_msg;
             err_msg << "Unrecognized or unsupported file type.\n";
