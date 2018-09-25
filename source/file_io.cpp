@@ -8,6 +8,7 @@
 #include <gsl/gsl_integration.h>
 #include "../include/file_io.h"
 #include "../include/tpods.h"
+#include "../include/cic.h"
 #include "../include/gadgetReader.h"
 #include "../include/galaxy.h"
 #include "../include/cosmology.h"
@@ -305,6 +306,81 @@ void readGadget2_ran(std::string file, std::vector<double> &delta, std::vector<d
     }
 }
 
+void readLNKNLog(std::string file, std::vector<double> &delta, std::vector<double> &delta2, vec3<int> N, vec3<double> L,
+                 vec3<double> r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw, double z_min,
+                 double z_max) {
+    std::ifstream fin(file);
+    while(!fin.eof()) {
+        vec3<double> pos;
+        double nbar, b, w;
+        fin >> pos.x >> pos.y >> pos.z >> nbar >> b >> w;
+        if (!fin.eof()) {
+            pk_nbw.x += w;
+            pk_nbw.y += w*w;
+            pk_nbw.z += nbar*w*w;
+            
+            bk_nbw.x += w*w*w;
+            bk_nbw.y += nbar*w*w*w;
+            bk_nbw.z += nbar*nbar*w*w*w;
+            
+            std::vector<double> weights;
+            std::vector<size_t> indices;
+            
+            getCICInfo(pos, N, L, indices, weights);
+            
+            for (int i = 0; i < indices.size(); ++i) {
+                delta[indices[i]] += weights[i]*w;
+                delta2[indices[i]] += weights[i]*w*w;
+            }
+        }
+    }
+    fin.close();
+}
+
+void readLNKNLog_ran(std::string file, std::vector<double> &delta, std::vector<double> &delta2, vec3<int> N, 
+                     vec3<double> &L, vec3<double> &r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw, 
+                     double z_min, double z_max) {
+    vec3<double> r_max = {0.0, 0.0, 0.0};
+    std::ifstream fin(file);
+    while(!fin.eof()) {
+        vec3<double> pos;
+        double nbar, b, w;
+        fin >> pos.x >> pos.y >> pos.z >> nbar >> b >> w;
+        if (!fin.eof()) {
+            if (pos.x > r_max.x) r_max.x = pos.x;
+            if (pos.y > r_max.y) r_max.y = pos.y;
+            if (pos.z > r_max.z) r_max.z = pos.z;
+            
+            pk_nbw.x += w;
+            pk_nbw.y += w*w;
+            pk_nbw.z += nbar*w*w;
+            
+            bk_nbw.x += w*w*w;
+            bk_nbw.y += nbar*w*w*w;
+            bk_nbw.z += nbar*nbar*w*w*w;
+            
+            std::vector<double> weights;
+            std::vector<size_t> indices;
+            
+            getCICInfo(pos, N, L, indices, weights);
+            
+            for (int i = 0; i < indices.size(); ++i) {
+                delta[indices[i]] += weights[i]*w;
+                delta2[indices[i]] += weights[i]*w*w;
+            }
+        }
+    }
+    fin.close();
+    
+    r_min.x = 0.0;
+    r_min.y = 0.0;
+    r_min.z = 0.0;
+    
+    L.x = r_max.x;
+    L.y = r_max.y;
+    L.z = r_max.z;
+}
+
 void setFileType(std::string typeString, FileType &type) {
     std::cout << "Setting file type " << typeString << std::endl;
     if (typeString == "DR12") {
@@ -321,6 +397,10 @@ void setFileType(std::string typeString, FileType &type) {
         type = gadget2;
     } else if (typeString == "gadget2_ran") {
         type = gadget2_ran;
+    } else if (typeString == "lnknlog") {
+        type = lnknlog;
+    } else if (typeString == "lnknlog_ran") {
+        type = lnknlog_ran;
     } else {
         std::stringstream err_msg;
         err_msg << "Unrecognized or unsupported file type.\n";
@@ -358,6 +438,14 @@ void readFile(std::string file, std::vector<double> &delta, std::vector<double> 
         case gadget2_ran:
             std::cout << "Reading file type: gadget2_ran" << std::endl;
             readGadget2_ran(file, delta, delta2, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
+            break;
+        case lnknlog:
+            std::cout << "Reading file type: lnknlog" << std::endl;
+            readLNKNLog(file, delta, delta2, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
+            break;
+        case lnknlog_ran:
+            std::cout << "Reading file type: lnknlog_ran" << std::endl;
+            readLNKNLog_ran(file, delta, delta2, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
             break;
         default:
             std::stringstream err_msg;
