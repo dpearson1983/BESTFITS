@@ -13,8 +13,8 @@ int Nx = 256
 int Ny = 512
 int Nz = 256
 
-string dataFileType = DR12
-string ranFileType = DR12_ran
+string dataFileType = lnknlog
+string ranFileType = lnknlog_ran
 
 string randomsFile = random0_DR12v5_CMASS_North.fits
 string dataFile = galaxy_DR12v5_CMASS_North.fits
@@ -31,3 +31,12 @@ bool lowMemoryMode = false
 bool calcQuadrupole = true
 bool exactTriangles = true
 
+string runMode = mock
+string mockBase = LNKNLogs_
+string mockExt = dat
+string outBase = LNKNLogs_Bk_
+string outExt = dat
+
+int digits = 4
+int num_mocks = 100
+int start_num = 1

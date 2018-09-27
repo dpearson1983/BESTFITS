@@ -306,6 +306,8 @@ int main(int argc, char *argv[]) {
         for (int mock = p.geti("start_num"); mock < p.geti("num_mocks") + p.geti("start_num"); ++mock) {
             std::string mockFile = filename(p.gets("mockBase"), p.geti("digits"), mock, p.gets("mockExt"));
             std::string outFile = filename(p.gets("outBase"), p.geti("digits"), mock, p.gets("outExt"));
+            std::string pkFile = filename(p.gets("pkBase"), p.geti("digits"), mock, p.gets("pkExt"));
+            std::string pkExtFile = filename(p.gets("pkExtBase"), p.geti("digits"), mock, p.gets("pkExtExt"));
             
             std::vector<double> gal(N.x*N.y*N.z);
             std::vector<double> gal2(N.x*N.y*N.z);
@@ -314,7 +316,7 @@ int main(int argc, char *argv[]) {
             vec3<double> gal_bk_nbw = {0.0, 0.0, 0.0};
             
             std::cout << "    Getting mock galaxies..." << std::endl;
-            readFile(mockFile, gal, gal2, N, L, r_min, cosmo, gal_pk_nbw, gal_pk_nbw, p.getd("z_min"), p.getd("z_max"),
+            readFile(mockFile, gal, gal2, N, L, r_min, cosmo, gal_pk_nbw, gal_bk_nbw, p.getd("z_min"), p.getd("z_max"),
                      dataFileType);
             
             alpha = gal_pk_nbw.x/ran_pk_nbw.x;
@@ -383,7 +385,7 @@ int main(int argc, char *argv[]) {
             binFrequencies((fftw_complex *)A_0.data(), P, N_k, N, kx, ky, kz, delta_k, k_min, k_max,
                            PkShotNoise);
             normalizePower(P, N_k, gal_pk_nbw.z);
-            writePowerSpectrumFile(p.gets("pkFile"), ks, P);
+            writePowerSpectrumFile(pkFile, ks, P);
             
             std::vector<double> ks_ext;
             for (int i = 0; i < p.geti("num_pk_bins"); ++i) {
@@ -395,7 +397,7 @@ int main(int argc, char *argv[]) {
             binFrequencies((fftw_complex *)A_0.data(), Pk, Nk, N, kx, ky, kz, delta_k, p.getd("pk_min"), p.getd("pk_max"),
                            PkShotNoise);
             normalizePower(Pk, Nk, gal_pk_nbw.z);
-            writePowerSpectrumFile(p.gets("bigPkFile"), ks_ext, Pk);
+            writePowerSpectrumFile(pkExtFile, ks_ext, Pk);
             
             std::cout << gal_bk_nbw.z << std::endl;
             

@@ -341,7 +341,13 @@ void readLNKNLog_ran(std::string file, std::vector<double> &delta, std::vector<d
                      vec3<double> &L, vec3<double> &r_min, cosmology &cosmo, vec3<double> &pk_nbw, vec3<double> &bk_nbw, 
                      double z_min, double z_max) {
     vec3<double> r_max = {0.0, 0.0, 0.0};
+    
+    r_min.x = 0.0;
+    r_min.y = 0.0;
+    r_min.z = 0.0;
+    
     std::ifstream fin(file);
+    fin >> L.x >> L.y >> L.z;
     while(!fin.eof()) {
         vec3<double> pos;
         double nbar, b, w;
@@ -371,10 +377,6 @@ void readLNKNLog_ran(std::string file, std::vector<double> &delta, std::vector<d
         }
     }
     fin.close();
-    
-    r_min.x = 0.0;
-    r_min.y = 0.0;
-    r_min.z = 0.0;
     
     L.x = r_max.x;
     L.y = r_max.y;
