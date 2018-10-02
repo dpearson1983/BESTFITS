@@ -429,6 +429,7 @@ void readFile(std::string file, std::vector<double> &delta, std::vector<double> 
         case patchy_ran:
             std::cout << "Reading file type: patchy_ran" << std::endl;
             readPatchyRan(file, delta, delta2, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
+            break;
         case density_field:
             std::cout << "Reading file type: density_field" << std::endl;
             readDensityField(file, delta, delta2, N, L, r_min, cosmo, pk_nbw, bk_nbw, z_min, z_max);
